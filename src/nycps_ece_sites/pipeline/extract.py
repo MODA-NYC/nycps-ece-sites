@@ -6,7 +6,7 @@ from nycps_ece_sites.utils import config_paths
 RAW_DIR = config_paths.RAW_DATA_DIR
 # %%
 
-def get_site_data():
+def get_site_data(print_output: bool = False) -> None:
     """
     Get the site data for the specified years and save it to the raw data 
     directory.
@@ -26,10 +26,11 @@ def get_site_data():
 
         raw_df.to_excel(save_path, index=False)
 
-        print(f"Saved site data for year {year} to {save_path}")
+        if print_output:
+            print(f"Saved site data for year {year} to {save_path}")
 
 # %%
 
 if __name__ == "__main__":
-    get_site_data()
+    get_site_data(print_output=True)
 # %%
