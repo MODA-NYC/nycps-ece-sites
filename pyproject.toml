@@ -1,0 +1,22 @@
+[project]
+name = "nycps-ece-sites"
+version = "0.1.0"
+description = "Generating data on NYCPS ECE site"
+readme = "README.md"
+authors = [
+    { name = "Tara Sullivan", email = "tasullivan@oti.nyc.gov" }
+]
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+nycps-ece-sites = "nycps_ece_sites:main"
+
+[build-system]
+requires = ["uv_build>=0.9.13,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.2.0",
+]
