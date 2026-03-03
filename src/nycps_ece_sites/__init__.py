@@ -1,2 +1,3 @@
-def main() -> None:
-    print("Hello from nycps-ece-sites!")
+from nycps_ece_sites.main import main
+
+__all__ = ['main']
