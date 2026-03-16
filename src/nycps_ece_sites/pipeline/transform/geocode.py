@@ -36,86 +36,237 @@ response_columns = [
 ]
 # %%'
 
+RUN_ALL = True
 print_output = True
 rand_seed = None
 sample_size = 5
 
-# generate id variable
-assert ~(df[['schooldbn', 'admission_process']].duplicated().any())
-df['id'] = df['schooldbn'] + '_' + df['admission_process']
+# address replace; if there are any incorrect addresses, replace them here
+replace_address_dict = {
+    # {site : {old_address: new_address}}
+    '08G778' : {
+        '2108 LACOMBE AVENUE, BROOKLYN, NY 10473': 
+        '2108 LACOMBE AVENUE, BRONX, NY 10473'
+    },
+    '17KBSP' : {
+        '771 CROWN STREET, NEW YORK, NY 11213':
+        '771 CROWN STREET, BROOKLYN, NY 11213'
+    },
+    '24Q019' : {
+        '44-10 99 Street, Queens, NY 11368':
+        '40-10 99 Street, Queens, NY 11368'
+    },
+    '24Z123' : {
+        '54-25 101 STREET, NEW YORK, NY 11368':
+        '54-25 101st STREET, QUEENS, NY 11368'
+    },
+    '24Z124': {
+        '104-04 CORONA AVENUE, NEW YORK, NY 11368':
+        '104-04 CORONA AVENUE, QUEENS, NY 11368'
+    },
+    '24Z125': {
+        '108-18 ROOSEVELT AVENUE, NEW YORK, NY 11368':
+        '108-18 ROOSEVELT AVENUE, QUEENS, NY 11368'
+    },	
+    '25H112' : {
+        '14 121ST STREET, QUEENS, NY 11356':
+        '14-24 121ST STREET, QUEENS, NY 11356'
+    },
+    '26QAJX' : {
+        '238-10 HILLSIDE AVENUE BELLEROSE, QUEENS, NY 11427':
+        '238-10 HILLSIDE AVENUE, QUEENS, NY 11427'
+    },
+    '26QBCR' : {
+        '86-29 COMMONWEATH BOULEVARD, ,BELLEROSE, NY 11426':
+        '86-29 COMMONWEALTH BOULEVARD, QUEENS, NY 11426'
+    },
+    '27H097': {
+        '149 RALEIGH STREET, QUEENS, NY 11417':
+        '149-44 RALEIGH STREET, QUEENS, NY 11417'
+    },
+    '27H110': {
+        '132 158TH STREET , QUEENS, NY 11434':
+        '132-31 158TH STREET, QUEENS, NY 11434'
+    },
+    '28G999': {
+        '102-35 63 ROAD DR, QUEENS, NY 11375':
+        '102-35 63 RD, QUEENS, NY 11375'
+    },
+    '29QAXD': {
+        '10960 202ND STREET, ST. ALBANS, NY 11412':
+        '109-60 202ND STREET, Queens, NY 11412'
+    },
+    '29QAXQ': {
+        '90-04 175TH STEET, QUEENS, NY 11432':
+        '90-04 175TH STREET, QUEENS, NY 11432'
+    },
+    '30H100': {
+        '31 34TH STREET, QUEENS, NY 11106':
+        '31-14 34TH STREET, QUEENS, NY 11106'
+    },
+    '31G917': {
+        '46 B CIRCLE LOOP, STATEN ISLAND, NY 10304':
+        '46B CIRCLE LOOP, STATEN ISLAND, NY 10304'
+    },
+    '31RAKL': {
+        '471 NORTH GANNON AVENUE STATEN ISLAND NEW YORK 10314, STATEN ISLAND, NY 10314':
+        '471 NORTH GANNON AVENUE, STATEN ISLAND, NY 10314'
+    }
+}
+def replace_address(df, replace_dict, id_var='id', print_output=False):
+    for site, address in replace_dict.items():
+        for old_address, new_address in address.items():
+            replace_row = ((df[id_var] == site) & (df['address'] == old_address))
+            if replace_row.any():
+                df.loc[replace_row, 'address'] = new_address
+                if print_output:
+                    print_str = (
+                        f'Replaced address for site {site}:\n'
+                        f'Old address: {old_address}\n'
+                        f'New address: {df.loc[replace_row, "address"].values[0]}\n'
+                    )
+                    print(print_str)
 
-# create address df
-geo_df = df[['id', 'address']].copy()
+
+if __name__ == '__main__':
+    if year == 2025:
+        df_copy = df.copy()
+        replace_address(
+            df=df_copy, replace_dict=replace_address_dict, 
+            id_var='schooldbn', print_output=True)
+
+# %%
+## SET UP
+# Make ID, 
+
+def _00_set_up_geocode_df(df, id_var=['schooldbn'], replace_address_dict={}):
+    df = df.copy()
+
+    # if using more than one variable, combine them to create a unique id
+    df['id'] = df[id_var].agg('_'.join, axis=1)
+
+    # create address df
+    geo_df = df[['id', 'address']].copy()
+
+    # drop duplicates
+    geo_df = geo_df.drop_duplicates()
+
+    # if there are any consecutive commas in a row; if there are
+    # replace them with a single comma
+    geo_df['address'] = geo_df['address'].str.replace(r',\s*,+', ',', regex=True)
+
+    # replace any addresses, if necessary
+    if len(replace_address_dict) > 0:
+        replace_address(
+            geo_df, replace_dict=replace_address_dict, 
+            id_var='id', print_output=False
+        )
+    
+    # split address by comma
+    geo_df[['street', 'borough', 'zip']] = geo_df['address'].str.split(',', expand=True)
+    for col in ['street', 'borough', 'zip']:
+        geo_df[col] = geo_df[col].str.strip()
+
+    # extract house number and street name from street column
+    geo_df[['house_number', 'street_name']] = geo_df['street'].str.extract(r'^(\d+-?\d*[AB]?)\s+(.*)')
+    geo_df.drop(columns='street', inplace=True)
+
+    geo_cols = ['address', 'street', 'borough', 'zip']
+
+    return geo_df
+
+if __name__ == '__main__':
+    geo_df = _00_set_up_geocode_df(df, replace_address_dict=replace_address_dict)
 
 # %%
 
-# if there are any consecutive commas in a row; if there are
-# replace them with a single comma
-geo_df['address'] = geo_df['address'].str.replace(r',\s*,+', ',', regex=True)
+def _01_replace_borough(geo_df, print_output=False):
 
-# split address by comma
-geo_df[['street', 'borough', 'zip']] = geo_df['address'].str.split(',', expand=True)
-for col in ['street', 'borough', 'zip']:
-    geo_df[col] = geo_df[col].str.strip()
+    # Details on borough parameter
+    # https://mlipper.github.io/geoclient/docs/current/user-guide/#borough
+    # NOT case sensitive
+    borough_list = [
+        "manhattan", "mn", "bronx", "bx", "the bronx", "brooklyn", "bk", "bklyn",
+        "queens", "qn", "staten island", "si", "statenisland", "statenis",
+        # "new york",   # although 'new york' was in the list, geoclient didn't return results
+        "new york city", "n.y.c.", "nyc", "n.y.", "ny",
+        "arverne", "astoria", "bayside", "bellerose", "breezy point",
+        "cambria heights", "college point", "corona", "east elmhurst", "elmhurst",
+        "far rockaway", "floral park", "flushing", "forest hills",
+        "fresh meadows", "glen oaks", "hollis", "howard beach", "inwood",
+        "jackson heights", "jamaica", "kew gardens", "little neck",
+        "long island city", "maspeth", "middle village", "new hyde park",
+        "oakland gardens", "ozone park", "qs", "queens village", "rego park",
+        "richmond hill", "ridgewood", "rockaway park", "rosedale",
+        "saint albans", "south ozone park", "south richmond hill",
+        "springfield gardens", "sunnyside", "whitestone", "woodhaven",
+        "woodside"
+    ]
 
-# extract house number and street name from street column
-geo_df[['house_number', 'street_name']] = geo_df['street'].str.extract(r'^(\d+-?\d*[AB]?)\s+(.*)')
-geo_df.drop(columns='street', inplace=True)
+    # fix miscellaneous errors; these don't properly match
+    replace_dict = {
+        'staten is': 'staten island',
+        'st. albans': 'saint albans',
+        'new york': 'manhattan',
+        'new york city': 'manhattan',
+        'ny': 'manhattan',
+        'jamaica': 'queens', 
+        'flushing': 'queens', 
+        'astoria': 'queens', 
+        'middle village': 'queens', 
+        'ridgewood': 'queens', 
+        'elmhurst': 'queens', 
+        'long island city': 'queens',
+        'east elmhurst': 'queens', 
+        'maspeth': 'queens', 
+        'bayside': 'queens', 
+        'bellerose': 'queens',
+        'south ozone park': 'queens', 
+        'howard beach': 'queens', 
+        'richmond hill': 'queens', 
+        'kew gardens': 'queens',
+        'saint albans': 'queens', 
+        'springfield gardens': 'queens', 
+        'queens village': 'queens',
+    }
+    geo_df['borough'] = geo_df['borough'].str.lower().replace(replace_dict)
 
-geo_cols = ['address', 'street', 'borough', 'zip']
+    if ~(geo_df['borough'].str.lower().isin(borough_list).all()):
+        # check rows that are not in geoclient `borough` variable
+        print('\nBoroughs not in geoclient `borough` variable:')
+        check_row = ~(geo_df['borough'].str.lower().isin(borough_list))
+        print_df = geo_df.loc[check_row, ['address', 'street_name', 'borough', 'zip']]
+        print(tabulate(print_df, headers='keys'))
+        # return
 
-# %% Borough
+    if print_output:
+        print('\nBorough value counts:')
+        print_df = geo_df['borough'].value_counts(dropna=False).to_frame()
+        print(tabulate(print_df, headers='keys'))
 
-# Details on borough parameter
-# https://mlipper.github.io/geoclient/docs/current/user-guide/#borough
-# NOT case sensitive
-borough_list = [
-    "manhattan", "mn", "bronx", "bx", "the bronx", "brooklyn", "bk", "bklyn",
-    "queens", "qn", "staten island", "si", "statenisland", "statenis",
-    "new york", "new york city", "n.y.c.", "nyc", "n.y.", "ny",
-    "arverne", "astoria", "bayside", "bellerose", "breezy point",
-    "cambria heights", "college point", "corona", "east elmhurst", "elmhurst",
-    "far rockaway", "floral park", "flushing", "forest hills",
-    "fresh meadows", "glen oaks", "hollis", "howard beach", "inwood",
-    "jackson heights", "jamaica", "kew gardens", "little neck",
-    "long island city", "maspeth", "middle village", "new hyde park",
-    "oakland gardens", "ozone park", "qs", "queens village", "rego park",
-    "richmond hill", "ridgewood", "rockaway park", "rosedale",
-    "saint albans", "south ozone park", "south richmond hill",
-    "springfield gardens", "sunnyside", "whitestone", "woodhaven",
-    "woodside"
-]
+    return geo_df
 
-# fix miscellaneous errors; these don't properly match
-replace_dict = {
-    'staten is': 'staten island',
-    'st. albans': 'saint albans'
-}
-geo_df['borough'] = geo_df['borough'].str.lower().replace(replace_dict)
-
-if ~(geo_df['borough'].str.lower().isin(borough_list).all()):
-    # check rows that are not in 
-    print('\nBoroughs not in geoclient `borough` variable:')
-    check_row = ~(geo_df['borough'].str.lower().isin(borough_list))
-    print_df = geo_df.loc[check_row, ['address', 'street_name', 'borough', 'zip']]
-    print(tabulate(print_df, headers='keys'))
-    # return
-
-if print_output:
-    print('\nBorough value counts:')
-    print_df = geo_df['borough'].value_counts(dropna=False).to_frame()
-    print(tabulate(print_df, headers='keys'))
+if __name__ == '__main__':
+    geo_df = _01_replace_borough(geo_df, print_output=True)
 
 # %% Zip code
-# check all zip codes are formatted like "NY 11226"
-assert (geo_df['zip'].str[:2] == 'NY').all()
-geo_df['zip'] = geo_df['zip'].str[3:]
 
-# check zip code is always 5 numbers
-assert geo_df['zip'].str.fullmatch(r'\d{5}').all()
-# %%
+def _02_format_zip(geo_df, print_output=False):
+    # check all zip codes are formatted like "NY 11226"
+    assert (geo_df['zip'].str[:2] == 'NY').all()
+    geo_df['zip'] = geo_df['zip'].str[3:]
 
-if print_output:
+    # check zip code is always 5 numbers
+    assert geo_df['zip'].str.fullmatch(r'\d{5}').all()
+    return geo_df
+
+if __name__ == '__main__':
+    geo_df = _02_format_zip(geo_df, print_output=True)
+
+
+# %% Random sample of addresses
+
+def check_address_fmt(geo_df, rand_seed=None, sample_size=5):
     print(f'\nRandom sample of addresses:')
     if rand_seed is None:
         rand_seed = random.randint(0, 1_000_000)
@@ -124,13 +275,19 @@ if print_output:
     print_df = geo_df[['address', 'house_number', 'street_name', 'borough', 'zip']].sample(sample_size, random_state=rand_seed)
     print(tabulate(print_df, headers='keys', showindex=False))
 
+if __name__ == '__main__':
+    check_address_fmt(geo_df, rand_seed=2, sample_size=5)
+
 # %%
 
-def geocode_address(row, return_all=False):
+def geocode_address(row, return_all=False, print_errors=False):
     """
     Call Geoclient v2 address endpoint.
     Borough can be full name (e.g. 'BROOKLYN') or code ('BK', 'MN', 'BX', 'QN', 'SI').
     Either borough or zip is required; providing both improves accuracy.
+
+    If print_errors is True, will print any error messages returned by the API 
+    for debugging purposes.
     """
 
     params = {
@@ -147,6 +304,11 @@ def geocode_address(row, return_all=False):
 
         address_data = data.get("address", {})
         message = address_data.get("message", None)  # Error message if any
+        if message is not None:
+            if print_errors:
+                print(f"Geocoding error for address '{row['address']}': {message}")
+            # result = {col: None for col in response_columns}
+            # return pd.Series(result)
         if return_all:
             return data
         
@@ -157,10 +319,9 @@ def geocode_address(row, return_all=False):
 
     except requests.exceptions.RequestException as e:
         result = {col: None for col in response_columns}
-        print('Error: ')
-        print(str(e))
+        if print_errors:
+            print(f"Geocoding request error for address '{row['address']}': {str(e)}")
         return pd.Series(result)
-
 
 if __name__ == '__main__':
     test_df = geo_df.sample(5, random_state=2)
@@ -172,3 +333,101 @@ if __name__ == '__main__':
     print_df = test_df[['house_number', 'street_name', 'borough', 'zip'] + response_columns]
     print(tabulate(print_df, headers='keys', showindex=False))
 
+
+# %%
+def geocode_df(df, print_errors=False):
+    df[response_columns] = df.apply(geocode_address, axis=1, print_errors=print_errors)
+    return df
+
+def print_geocode_df(df, sample_size=5, random_state=None):
+    print_df = df.sample(sample_size, random_state=random_state)
+
+    print(tabulate(print_df[['house_number', 'street_name', 'borough', 'zip'] + response_columns], headers='keys', showindex=False))
+
+if __name__ == '__main__':
+    test_df = geo_df.sample(5, random_state=2)
+    test_df = geocode_df(test_df)
+
+    print_geocode_df(test_df)
+
+
+# %% Run everything
+if __name__ == '__main__':
+    if RUN_ALL:
+        geo_df = geocode_df(geo_df)
+
+# %%
+
+if __name__ == '__main__':
+
+    # find missing geocodes
+    check_df = geo_df.loc[geo_df['latitude'].isna()].copy()
+    check_df = geo_df.loc[geo_df['latitude'].isna()]
+
+
+
+# %% When refreshing address replace dict, start here
+
+if __name__ == '__main__':
+    replace_address(df=check_df, id_var='id', replace_dict=replace_address_dict, print_output=True)
+
+    check_df = _00_set_up_geocode_df(check_df, id_var=['id'])
+    check_df = _01_replace_borough(check_df, print_output=True)
+    check_df = _02_format_zip(check_df, print_output=True)
+    check_df = geocode_df(check_df, print_errors=True)
+
+# %%
+if __name__ == '__main__':
+    # repeat the process
+    check_df = check_df.loc[check_df['latitude'].isna()]
+    check_df.drop(columns=response_columns, inplace=True)
+    check_df = geocode_df(check_df, print_errors=True)
+# %%
+
+if __name__ == '__main__':
+    # try and debug individual addresses
+    check_row = check_df.iloc[0]
+    # check_row = check_df.loc[167]
+    param_check = {
+        'houseNumber': check_row['house_number'], 'street': check_row['street_name'], 
+        'borough': check_row['borough'], 'zip': check_row['zip']
+    }
+    param_check = {
+        'houseNumber': '46B', 'street': 'circle loop', 
+        'borough': 'staten island', 'zip': '10304'  
+
+    }
+    response = requests.get(
+        BASE_URL, headers=HEADERS, params=param_check, timeout=10)
+    for key, value in response.json()['address'].items():
+        print(f'{key}: {value}')
+
+
+    # df.loc[df['schooldbn'] == '17KBSP', ['address', 'url']]
+    # df.loc[df['schooldbn'] == '24Q019', ['address', 'url']]
+    # df.loc[df['schooldbn'] == '24Z123', ['address', 'url']]
+    # df.loc[df['schooldbn'] == '24Z125', ['address', 'url']]
+    # df.loc[df['schooldbn'] == '26QAJX', ['schooldbn', 'address', 'url']]
+    # df.loc[df['schooldbn'] == '26QBCR', ['schooldbn', 'address', 'url']]
+    # df.loc[df['schooldbn'] == '27H097', ['schooldbn', 'address', 'url']]
+    # df.loc[df['schooldbn'] == '27H110', ['schooldbn', 'address', 'url']]
+    # df.loc[df['schooldbn'] == '28G999', ['schooldbn', 'address', 'url']]
+    # df.loc[df['schooldbn'] == '29QAXD', ['schooldbn', 'address', 'url']]
+    # df.loc[df['schooldbn'] == '29QAXQ', ['schooldbn', 'address', 'url']]
+    # df.loc[df['schooldbn'] == '30H100', ['schooldbn', 'address', 'url']]
+    df.loc[df['schooldbn'] == '31G917', ['schooldbn', 'address', 'url']]
+
+
+
+
+# %%
+
+
+# %%
+
+def run_geocode_pipeline(df, print_output=False):
+    geo_df = _00_set_up_geocode_df(df)
+    geo_df = _01_replace_borough(geo_df, print_output=print_output)
+    geo_df = _02_format_zip(geo_df, print_output=print_output)
+    geo_df = geocode_df(geo_df, print_errors=True)
+    return geo_df
