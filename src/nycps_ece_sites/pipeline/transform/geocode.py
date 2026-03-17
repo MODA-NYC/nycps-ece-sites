@@ -11,6 +11,7 @@ from tabulate import tabulate
 import textwrap
 
 RAW_DIR = config_paths.RAW_DATA_DIR
+GEOCODE_DIR = config_paths.GEOCODE_DIR
 # %%
 
 if __name__ == '__main__':
@@ -42,7 +43,7 @@ rand_seed = None
 sample_size = 5
 
 # address replace; if there are any incorrect addresses, replace them here
-replace_address_dict = {
+replace_address_dict_2025 = {
     # {site : {old_address: new_address}}
     '08G778' : {
         '2108 LACOMBE AVENUE, BROOKLYN, NY 10473': 
@@ -114,6 +115,7 @@ replace_address_dict = {
     }
 }
 def replace_address(df, replace_dict, id_var='id', print_output=False):
+    df = df.copy()
     for site, address in replace_dict.items():
         for old_address, new_address in address.items():
             replace_row = ((df[id_var] == site) & (df['address'] == old_address))
@@ -127,42 +129,86 @@ def replace_address(df, replace_dict, id_var='id', print_output=False):
                     )
                     print(print_str)
 
+    return df
+
 
 if __name__ == '__main__':
     if year == 2025:
         df_copy = df.copy()
-        replace_address(
-            df=df_copy, replace_dict=replace_address_dict, 
+        df_copy = replace_address(
+            df=df_copy, replace_dict=replace_address_dict_2025, 
             id_var='schooldbn', print_output=True)
 
 # %%
 ## SET UP
 # Make ID, 
 
-def _00_set_up_geocode_df(df, id_var=['schooldbn'], replace_address_dict={}):
-    df = df.copy()
+def _00_set_up_geocode_df(df, id_var=['schooldbn'], replace_address_dict={}, print_output=False):
+    """
+    Creates a geo dataframe with columns for house number, street name, borough, and zip code
 
+    Parameters:
+    - df: original dataframe with address column
+    - id_var: variable(s) to use as unique identifier for each row; if using more
+    - replace_address_dict: dictionary to replace address
+
+    Noes:
+    * Returns a dataframe with `id`, `address`, and columns built from address
+      (house number, street_name, borough, and zip)
+    * Will join multiple id columns if necessary. Note this for merging in dataframes
+      in the future. 
+    """
+    df = df.copy()
+    if print_output:
+        print_str = (
+            "\nSTEP 0: Setting up geo dataframe for geocoding. "
+        )
+        print(print_str)
+
+    if print_output:
+        print_str = (
+            "A. Creating a geo dataframe with `id` and `address`."
+        )
+        print(textwrap.fill(print_str, 80))
     # if using more than one variable, combine them to create a unique id
     df['id'] = df[id_var].agg('_'.join, axis=1)
 
     # create address df
     geo_df = df[['id', 'address']].copy()
 
-    # drop duplicates
-    geo_df = geo_df.drop_duplicates()
-
     # if there are any consecutive commas in a row; if there are
     # replace them with a single comma
-    geo_df['address'] = geo_df['address'].str.replace(r',\s*,+', ',', regex=True)
+    if print_output:
+        print_str = (
+            "B. Format address; replace values if necessary.\n"
+        )
+        print(print_str)
 
     # replace any addresses, if necessary
     if len(replace_address_dict) > 0:
-        replace_address(
+        geo_df = replace_address(
             geo_df, replace_dict=replace_address_dict, 
-            id_var='id', print_output=False
+            id_var='id', print_output=print_output
         )
     
+    # remove any consecutive commas in the address; this can cause issues with geocoding
+    geo_df['address'] = geo_df['address'].str.replace(r',\s*,+', ',', regex=True)
+
+
+    # drop duplicates
+    if print_output:
+        print_str = (
+            "C. Dropping duplicates from geo dataframe."
+        )
+        print(print_str)
+    geo_df = geo_df.drop_duplicates()
+    
     # split address by comma
+    if print_output:
+        print_str = (
+            "D. Splitting address into street, borough, and zip."
+        )
+        print(print_str)
     geo_df[['street', 'borough', 'zip']] = geo_df['address'].str.split(',', expand=True)
     for col in ['street', 'borough', 'zip']:
         geo_df[col] = geo_df[col].str.strip()
@@ -171,17 +217,22 @@ def _00_set_up_geocode_df(df, id_var=['schooldbn'], replace_address_dict={}):
     geo_df[['house_number', 'street_name']] = geo_df['street'].str.extract(r'^(\d+-?\d*[AB]?)\s+(.*)')
     geo_df.drop(columns='street', inplace=True)
 
-    geo_cols = ['address', 'street', 'borough', 'zip']
+    # geo_cols = ['address', 'street', 'borough', 'zip']
 
     return geo_df
 
 if __name__ == '__main__':
-    geo_df = _00_set_up_geocode_df(df, replace_address_dict=replace_address_dict)
+    geo_df = _00_set_up_geocode_df(
+        df, replace_address_dict=replace_address_dict_2025, print_output=True)
 
 # %%
 
 def _01_replace_borough(geo_df, print_output=False):
-
+    if print_output:
+        print_str = (
+            "\nSTEP 1: Replacing borough values to match geoclient `borough` variable."
+        )
+        print(print_str)
     # Details on borough parameter
     # https://mlipper.github.io/geoclient/docs/current/user-guide/#borough
     # NOT case sensitive
@@ -252,6 +303,11 @@ if __name__ == '__main__':
 # %% Zip code
 
 def _02_format_zip(geo_df, print_output=False):
+    if print_output:
+        print_str = (
+            "\nSTEP 2: Formatting zip code to match geoclient `zip` variable."
+        )
+        print(print_str)
     # check all zip codes are formatted like "NY 11226"
     assert (geo_df['zip'].str[:2] == 'NY').all()
     geo_df['zip'] = geo_df['zip'].str[3:]
@@ -264,9 +320,40 @@ if __name__ == '__main__':
     geo_df = _02_format_zip(geo_df, print_output=True)
 
 
+# %%
+
+def _format_df(
+        df, print_output=False, replace_address_dict=replace_address_dict_2025,
+        id_var='schooldbn'
+    ):
+    """
+    Format dataframe for geocoding
+    """
+
+    if print_output:
+        print_str = (
+            "\nFormatting dataframe for geocoding."
+        )
+        print(print_str)
+    geo_df = _00_set_up_geocode_df(
+        df, replace_address_dict=replace_address_dict_2025, 
+        print_output=print_output, id_var=[id_var])
+    geo_df = _01_replace_borough(geo_df, print_output=print_output)
+    geo_df = _02_format_zip(geo_df, print_output=print_output)
+    return geo_df
+
+if __name__ == '__main__':
+    geo_df = _format_df(df, print_output=True)
+
+
 # %% Random sample of addresses
 
 def check_address_fmt(geo_df, rand_seed=None, sample_size=5):
+    """
+    Generates a random sample of addresses to check format variables. By changing 
+    the seed and sample size, you can see if the address looks reasonable, 
+    and that house_number, street_name, borough, and zip all look correct
+    """
     print(f'\nRandom sample of addresses:')
     if rand_seed is None:
         rand_seed = random.randint(0, 1_000_000)
@@ -335,7 +422,18 @@ if __name__ == '__main__':
 
 
 # %%
-def geocode_df(df, print_errors=False):
+def geocode_df(df, print_errors=False, response_columns=response_columns):
+    """
+    Geocode a dataframe of addresses using the Geoclient API.
+
+    Parameters:
+    - df: dataframe with columns for house_number, street_name, borough, and zip
+    - print_errors: if True, will print any error messages returned by the API for debugging
+    - response_columns: list of columns to include in the geocoded dataframe
+
+    Returns:
+    - df: dataframe with geocoded address information
+    """
     df[response_columns] = df.apply(geocode_address, axis=1, print_errors=print_errors)
     return df
 
@@ -369,65 +467,94 @@ if __name__ == '__main__':
 # %% When refreshing address replace dict, start here
 
 if __name__ == '__main__':
-    replace_address(df=check_df, id_var='id', replace_dict=replace_address_dict, print_output=True)
 
-    check_df = _00_set_up_geocode_df(check_df, id_var=['id'])
-    check_df = _01_replace_borough(check_df, print_output=True)
-    check_df = _02_format_zip(check_df, print_output=True)
-    check_df = geocode_df(check_df, print_errors=True)
+    if len(check_df) > 0:
+        check_df = replace_address(df=check_df, id_var='id', replace_dict=replace_address_dict_2025, print_output=True)
+
+        check_df = _00_set_up_geocode_df(check_df, id_var=['id'])
+        check_df = _01_replace_borough(check_df, print_output=True)
+        check_df = _02_format_zip(check_df, print_output=True)
+        check_df = geocode_df(check_df, print_errors=True)
 
 # %%
 if __name__ == '__main__':
     # repeat the process
-    check_df = check_df.loc[check_df['latitude'].isna()]
-    check_df.drop(columns=response_columns, inplace=True)
-    check_df = geocode_df(check_df, print_errors=True)
+    if len(check_df) > 0:
+        check_df = check_df.loc[check_df['latitude'].isna()]
+        check_df.drop(columns=response_columns, inplace=True)
+        check_df = geocode_df(check_df, print_errors=True)
 # %%
 
 if __name__ == '__main__':
-    # try and debug individual addresses
-    check_row = check_df.iloc[0]
-    # check_row = check_df.loc[167]
-    param_check = {
-        'houseNumber': check_row['house_number'], 'street': check_row['street_name'], 
-        'borough': check_row['borough'], 'zip': check_row['zip']
-    }
-    param_check = {
-        'houseNumber': '46B', 'street': 'circle loop', 
-        'borough': 'staten island', 'zip': '10304'  
+    if len(check_df) > 0:
+        # try and debug individual addr esses
+        check_row = check_df.iloc[0]
+        # check_row = check_df.loc[167]
+        param_check = {
+            'houseNumber': check_row['house_number'], 'street': check_row['street_name'], 
+            'borough': check_row['borough'], 'zip': check_row['zip']
+        }
+        param_check = {
+            'houseNumber': '46B', 'street': 'circle loop', 
+            'borough': 'staten island', 'zip': '10304'  
 
-    }
-    response = requests.get(
-        BASE_URL, headers=HEADERS, params=param_check, timeout=10)
-    for key, value in response.json()['address'].items():
-        print(f'{key}: {value}')
+        }
+        response = requests.get(
+            BASE_URL, headers=HEADERS, params=param_check, timeout=10)
+        for key, value in response.json()['address'].items():
+            print(f'{key}: {value}')
 
 
-    # df.loc[df['schooldbn'] == '17KBSP', ['address', 'url']]
-    # df.loc[df['schooldbn'] == '24Q019', ['address', 'url']]
-    # df.loc[df['schooldbn'] == '24Z123', ['address', 'url']]
-    # df.loc[df['schooldbn'] == '24Z125', ['address', 'url']]
-    # df.loc[df['schooldbn'] == '26QAJX', ['schooldbn', 'address', 'url']]
-    # df.loc[df['schooldbn'] == '26QBCR', ['schooldbn', 'address', 'url']]
-    # df.loc[df['schooldbn'] == '27H097', ['schooldbn', 'address', 'url']]
-    # df.loc[df['schooldbn'] == '27H110', ['schooldbn', 'address', 'url']]
-    # df.loc[df['schooldbn'] == '28G999', ['schooldbn', 'address', 'url']]
-    # df.loc[df['schooldbn'] == '29QAXD', ['schooldbn', 'address', 'url']]
-    # df.loc[df['schooldbn'] == '29QAXQ', ['schooldbn', 'address', 'url']]
-    # df.loc[df['schooldbn'] == '30H100', ['schooldbn', 'address', 'url']]
-    df.loc[df['schooldbn'] == '31G917', ['schooldbn', 'address', 'url']]
+        # df.loc[df['schooldbn'] == '17KBSP', ['address', 'url']]
+        # df.loc[df['schooldbn'] == '24Q019', ['address', 'url']]
+        # df.loc[df['schooldbn'] == '24Z123', ['address', 'url']]
+        # df.loc[df['schooldbn'] == '24Z125', ['address', 'url']]
+        # df.loc[df['schooldbn'] == '26QAJX', ['schooldbn', 'address', 'url']]
+        # df.loc[df['schooldbn'] == '26QBCR', ['schooldbn', 'address', 'url']]
+        # df.loc[df['schooldbn'] == '27H097', ['schooldbn', 'address', 'url']]
+        # df.loc[df['schooldbn'] == '27H110', ['schooldbn', 'address', 'url']]
+        # df.loc[df['schooldbn'] == '28G999', ['schooldbn', 'address', 'url']]
+        # df.loc[df['schooldbn'] == '29QAXD', ['schooldbn', 'address', 'url']]
+        # df.loc[df['schooldbn'] == '29QAXQ', ['schooldbn', 'address', 'url']]
+        # df.loc[df['schooldbn'] == '30H100', ['schooldbn', 'address', 'url']]
+        df.loc[df['schooldbn'] == '31G917', ['schooldbn', 'address', 'url']]
+
+
+# %%
+
+def get_geo_df(df, print_output=False):
+    geo_df = _format_df(
+        df, print_output=print_output, 
+        id_var='schooldbn', replace_address_dict=replace_address_dict_2025)
+    geo_df = geocode_df(geo_df, print_errors=False)
+
+    merge_df = pd.merge(
+        left=df,
+        right=geo_df,
+        left_on='schooldbn',
+        right_on='id',
+        how='outer',
+        validate='m:1',
+        indicator=True
+    )
+
+    assert (merge_df['_merge'] == 'both').all()
+
+    merge_df.drop(columns=['id', '_merge'], inplace=True)
+
+    return merge_df
+
+if __name__ == '__main__':
+    geo_df = get_geo_df(df, print_output=True)
+
+    
+    # %%
+
+if __name__ == '__main__':
+    save_file = 'site_dir_geo_2025.csv'
+    geo_df.to_csv(GEOCODE_DIR / save_file, index=False)
 
 
 
 
 # %%
-
-
-# %%
-
-def run_geocode_pipeline(df, print_output=False):
-    geo_df = _00_set_up_geocode_df(df)
-    geo_df = _01_replace_borough(geo_df, print_output=print_output)
-    geo_df = _02_format_zip(geo_df, print_output=print_output)
-    geo_df = geocode_df(geo_df, print_errors=True)
-    return geo_df
