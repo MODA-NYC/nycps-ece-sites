@@ -37,7 +37,7 @@ response_columns = [
 ]
 # %%'
 
-RUN_ALL = True
+RUN_ALL = False
 print_output = True
 rand_seed = None
 sample_size = 5
@@ -114,6 +114,14 @@ replace_address_dict_2025 = {
         '471 NORTH GANNON AVENUE, STATEN ISLAND, NY 10314'
     }
 }
+
+# lookup: year -> address replacement dict
+REPLACE_ADDRESS_DICTS = {
+    2025: replace_address_dict_2025,
+    # add future years here, e.g.:
+    # 2026: replace_address_dict_2026,
+}
+
 def replace_address(df, replace_dict, id_var='id', print_output=False):
     df = df.copy()
     for site, address in replace_dict.items():
@@ -133,11 +141,10 @@ def replace_address(df, replace_dict, id_var='id', print_output=False):
 
 
 if __name__ == '__main__':
-    if year == 2025:
-        df_copy = df.copy()
-        df_copy = replace_address(
-            df=df_copy, replace_dict=replace_address_dict_2025, 
-            id_var='schooldbn', print_output=True)
+    df_copy = df.copy()
+    df_copy = replace_address(
+        df=df_copy, replace_dict=REPLACE_ADDRESS_DICTS.get(year, {}), 
+        id_var='schooldbn', print_output=True)
 
 # %%
 ## SET UP
@@ -223,7 +230,7 @@ def _00_set_up_geocode_df(df, id_var=['schooldbn'], replace_address_dict={}, pri
 
 if __name__ == '__main__':
     geo_df = _00_set_up_geocode_df(
-        df, replace_address_dict=replace_address_dict_2025, print_output=True)
+        df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True)
 
 # %%
 
@@ -323,12 +330,14 @@ if __name__ == '__main__':
 # %%
 
 def _format_df(
-        df, print_output=False, replace_address_dict=replace_address_dict_2025,
+        df, print_output=False, replace_address_dict=None,
         id_var='schooldbn'
     ):
     """
     Format dataframe for geocoding
     """
+    if replace_address_dict is None:
+        replace_address_dict = {}
 
     if print_output:
         print_str = (
@@ -336,14 +345,14 @@ def _format_df(
         )
         print(print_str)
     geo_df = _00_set_up_geocode_df(
-        df, replace_address_dict=replace_address_dict_2025, 
+        df, replace_address_dict=replace_address_dict, 
         print_output=print_output, id_var=[id_var])
     geo_df = _01_replace_borough(geo_df, print_output=print_output)
     geo_df = _02_format_zip(geo_df, print_output=print_output)
     return geo_df
 
 if __name__ == '__main__':
-    geo_df = _format_df(df, print_output=True)
+    geo_df = _format_df(df, print_output=True, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}))
 
 
 # %% Random sample of addresses
@@ -469,7 +478,7 @@ if __name__ == '__main__':
 if __name__ == '__main__':
 
     if len(check_df) > 0:
-        check_df = replace_address(df=check_df, id_var='id', replace_dict=replace_address_dict_2025, print_output=True)
+        check_df = replace_address(df=check_df, id_var='id', replace_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True)
 
         check_df = _00_set_up_geocode_df(check_df, id_var=['id'])
         check_df = _01_replace_borough(check_df, print_output=True)
@@ -522,16 +531,52 @@ if __name__ == '__main__':
 
 # %%
 
-def get_geo_df(df, print_output=False):
-    geo_df = _format_df(
-        df, print_output=print_output, 
-        id_var='schooldbn', replace_address_dict=replace_address_dict_2025)
-    geo_df = geocode_df(geo_df, print_errors=False)
+def geocode_site_data(
+        df, id_var='schooldbn', replace_address_dict=None,
+        print_output=False, save_path=None
+    ):
+    """
+    Format and geocode a site directory dataframe.
 
+    Parameters:
+    - df: raw site directory dataframe
+    - id_var: column to use as unique site identifier
+    - replace_address_dict: dict of address corrections (keyed by site id)
+    - print_output: whether to print progress
+    - save_path: if provided, save the geocoded dataframe to this path
+
+    Returns:
+    - geo_df: geocoded dataframe with id, address, and geocode columns
+    """
+    geo_df = _format_df(
+        df, print_output=print_output,
+        id_var=id_var, replace_address_dict=replace_address_dict)
+    geo_df = geocode_df(geo_df, print_errors=print_output)
+
+    if save_path is not None:
+        geo_df.to_csv(save_path, index=False)
+        if print_output:
+            print(f"\nSaved geocoded data to {save_path}")
+
+    return geo_df
+
+
+def merge_geocode(df, geo_df, id_var='schooldbn'):
+    """
+    Merge geocoded data back onto the original site directory dataframe.
+
+    Parameters:
+    - df: original site directory dataframe
+    - geo_df: geocoded dataframe (output of geocode_site_data)
+    - id_var: column used as unique site identifier
+
+    Returns:
+    - merge_df: merged dataframe
+    """
     merge_df = pd.merge(
         left=df,
         right=geo_df,
-        left_on='schooldbn',
+        left_on=id_var,
         right_on='id',
         how='outer',
         validate='m:1',
@@ -539,20 +584,20 @@ def get_geo_df(df, print_output=False):
     )
 
     assert (merge_df['_merge'] == 'both').all()
-
     merge_df.drop(columns=['id', '_merge'], inplace=True)
 
     return merge_df
 
-if __name__ == '__main__':
-    geo_df = get_geo_df(df, print_output=True)
 
-    
+if __name__ == '__main__':
+    geo_df = geocode_site_data(
+        df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True,
+        save_path=GEOCODE_DIR / f'site_dir_geo_{year}.csv')
+
     # %%
 
 if __name__ == '__main__':
-    save_file = 'site_dir_geo_2025.csv'
-    geo_df.to_csv(GEOCODE_DIR / save_file, index=False)
+    merged_df = merge_geocode(df, geo_df)
 
 
 
