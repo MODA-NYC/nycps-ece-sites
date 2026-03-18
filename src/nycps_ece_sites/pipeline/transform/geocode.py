@@ -16,7 +16,8 @@ GEOCODE_DIR = config_paths.GEOCODE_DIR
 # %%
 
 if __name__ == '__main__':
-    year = 2025
+    # year = 2025
+    year = 2024
     df = pd.read_excel(RAW_DIR / f"site_dir_{year}.xlsx")
 
 # %% Set up data to Geocode the new data
@@ -38,8 +39,8 @@ response_columns = [
 ]
 # %%'
 
-RUN_ALL = False
-CHECK_ALL = False
+RUN_ALL = True
+CHECK_ALL = True
 print_output = True
 rand_seed = None
 sample_size = 5
@@ -117,9 +118,58 @@ replace_address_dict_2025 = {
     }
 }
 
+replace_address_dict_2024 = {
+    '05MAWW': {
+        '3333 BROADWAY, MANHATTAN, NY 10031':
+        '3301 BROADWAY, MANHATTAN, NY 10031'
+    },
+    '08G778' : {
+        '2108 LACOMBE AVENUE, BROOKLYN, NY 10473': 
+        '2108 LACOMBE AVENUE, BRONX, NY 10473'
+    },
+    '17KBSP' : {
+        '771 CROWN STREET, NEW YORK, NY 11213':
+        '771 CROWN STREET, BROOKLYN, NY 11213'
+    },
+    '24Z123' : {
+        '54-25 101 STREET, NEW YORK, NY 11368':
+        '54-25 101st STREET, QUEENS, NY 11368'
+    },
+    '24Z125': {
+        '108-18 ROOSEVELT AVENUE, NEW YORK, NY 11368':
+        '108-18 ROOSEVELT AVENUE, QUEENS, NY 11368'
+    },
+    '26QAJX' : {
+        '238-10 HILLSIDE AVENUE BELLEROSE, QUEENS, NY 11427':
+        '238-10 HILLSIDE AVENUE, QUEENS, NY 11427'
+    },
+    '26QBCR' : {
+        '86-29 COMMONWEATH BOULEVARD, ,BELLEROSE, NY 11426':
+        '86-29 COMMONWEALTH BOULEVARD, QUEENS, NY 11426'
+    },
+    '29QAXD': {
+        '10960 202ND STREET, ST. ALBANS, NY 11412':
+        '109-60 202ND STREET, Queens, NY 11412'
+    },
+    '29QAXQ': {
+        '90-04 175TH STEET, QUEENS, NY 11432':
+        '90-04 175TH STREET, QUEENS, NY 11432'
+    },
+    '31RAKL': {
+        '471 NORTH GANNON AVENUE STATEN ISLAND NEW YORK 10314, STATEN ISLAND, NY 10314':
+        '471 NORTH GANNON AVENUE, STATEN ISLAND, NY 10314'
+    }
+}
+
 # lookup: year -> address replacement dict
 REPLACE_ADDRESS_DICTS = {
     2025: replace_address_dict_2025,
+    2024: replace_address_dict_2024,
+    2023: {},
+    2022: {},
+    2021: {},
+    2020: {},
+    2019: {},
     # add future years here, e.g.:
     # 2026: replace_address_dict_2026,
 }
@@ -232,7 +282,8 @@ def _00_set_up_geocode_df(df, id_var=['schooldbn'], replace_address_dict={}, pri
 
 if __name__ == '__main__':
     geo_df = _00_set_up_geocode_df(
-        df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True)
+        df, print_output=True,
+        replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}))
 
 # %%
 
@@ -267,6 +318,7 @@ def _01_replace_borough(geo_df, print_output=False):
     replace_dict = {
         'staten is': 'staten island',
         'st. albans': 'saint albans',
+        'saint albans': 'saint albans',
         'new york': 'manhattan',
         'new york city': 'manhattan',
         'ny': 'manhattan',
@@ -288,6 +340,7 @@ def _01_replace_borough(geo_df, print_output=False):
         'saint albans': 'queens', 
         'springfield gardens': 'queens', 
         'queens village': 'queens',
+        'rockaway park': 'queens',
     }
     geo_df['borough'] = geo_df['borough'].str.lower().replace(replace_dict)
 
@@ -370,7 +423,7 @@ def check_address_fmt(geo_df, rand_seed=None, sample_size=5):
         rand_seed = random.randint(0, 1_000_000)
         print(f'(Random seed = {rand_seed})')
     rng = random.Random(rand_seed)
-    print_df = geo_df[['address', 'house_number', 'street_name', 'borough', 'zip']].sample(sample_size, random_state=rand_seed)
+    print_df = geo_df[['id', 'address', 'house_number', 'street_name', 'borough', 'zip']].sample(sample_size, random_state=rand_seed)
     print(tabulate(print_df, headers='keys', showindex=False))
 
 if __name__ == '__main__':
@@ -482,7 +535,9 @@ if __name__ == '__main__':
 
     if CHECK_ALL: 
         if len(check_df) > 0:
-            check_df = replace_address(df=check_df, id_var='id', replace_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True)
+            check_df = replace_address(
+                df=check_df, id_var='id', 
+                replace_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True)
 
             check_df = _00_set_up_geocode_df(check_df, id_var=['id'])
             check_df = _01_replace_borough(check_df, print_output=True)
@@ -509,11 +564,10 @@ if __name__ == '__main__':
                 'houseNumber': check_row['house_number'], 'street': check_row['street_name'], 
                 'borough': check_row['borough'], 'zip': check_row['zip']
             }
-            param_check = {
-                'houseNumber': '46B', 'street': 'circle loop', 
-                'borough': 'staten island', 'zip': '10304'  
-
-            }
+            # param_check = {
+            #     'houseNumber': '3301', 'street': 'BROADWAY', 
+            #     'borough': 'manhattan', 'zip': '10031'  
+            # }
             response = requests.get(
                 BASE_URL, headers=HEADERS, params=param_check, timeout=10)
             for key, value in response.json()['address'].items():
@@ -532,7 +586,8 @@ if __name__ == '__main__':
             # df.loc[df['schooldbn'] == '29QAXD', ['schooldbn', 'address', 'url']]
             # df.loc[df['schooldbn'] == '29QAXQ', ['schooldbn', 'address', 'url']]
             # df.loc[df['schooldbn'] == '30H100', ['schooldbn', 'address', 'url']]
-            df.loc[df['schooldbn'] == '31G917', ['schooldbn', 'address', 'url']]
+            # df.loc[df['schooldbn'] == '05MAWW', ['schooldbn', 'address', 'url']]
+            df.loc[df['schooldbn'] == '08G778', ['schooldbn', 'address', 'url']]
 
 
 # %%
@@ -562,6 +617,7 @@ def geocode_site_data(
         print('\nGeocoding addresses...')
     geo_df = geocode_df(geo_df, print_errors=False)
 
+    # rename variable for merging back into original site directory dataframe
     geo_df.rename(columns={'id': 'schooldbn'}, inplace=True)
 
     if save_path is not None:
