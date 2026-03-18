@@ -159,7 +159,7 @@ def _00_set_up_geocode_df(df, id_var=['schooldbn'], replace_address_dict={}, pri
     - id_var: variable(s) to use as unique identifier for each row; if using more
     - replace_address_dict: dictionary to replace address
 
-    Noes:
+    Notes:
     * Returns a dataframe with `id`, `address`, and columns built from address
       (house number, street_name, borough, and zip)
     * Will join multiple id columns if necessary. Note this for merging in dataframes
@@ -598,8 +598,3 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     merged_df = merge_geocode(df, geo_df)
-
-
-
-
-# %%
