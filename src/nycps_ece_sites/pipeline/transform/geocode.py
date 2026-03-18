@@ -2,6 +2,7 @@
 import pandas as pd
 import random
 import os
+import time
 
 import requests
 
@@ -38,6 +39,7 @@ response_columns = [
 # %%'
 
 RUN_ALL = False
+CHECK_ALL = False
 print_output = True
 rand_seed = None
 sample_size = 5
@@ -468,8 +470,9 @@ if __name__ == '__main__':
 if __name__ == '__main__':
 
     # find missing geocodes
-    check_df = geo_df.loc[geo_df['latitude'].isna()].copy()
-    check_df = geo_df.loc[geo_df['latitude'].isna()]
+    if CHECK_ALL: 
+        check_df = geo_df.loc[geo_df['latitude'].isna()].copy()
+        check_df = geo_df.loc[geo_df['latitude'].isna()]
 
 
 
@@ -477,56 +480,59 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
 
-    if len(check_df) > 0:
-        check_df = replace_address(df=check_df, id_var='id', replace_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True)
+    if CHECK_ALL: 
+        if len(check_df) > 0:
+            check_df = replace_address(df=check_df, id_var='id', replace_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True)
 
-        check_df = _00_set_up_geocode_df(check_df, id_var=['id'])
-        check_df = _01_replace_borough(check_df, print_output=True)
-        check_df = _02_format_zip(check_df, print_output=True)
-        check_df = geocode_df(check_df, print_errors=True)
+            check_df = _00_set_up_geocode_df(check_df, id_var=['id'])
+            check_df = _01_replace_borough(check_df, print_output=True)
+            check_df = _02_format_zip(check_df, print_output=True)
+            check_df = geocode_df(check_df, print_errors=True)
 
 # %%
 if __name__ == '__main__':
-    # repeat the process
-    if len(check_df) > 0:
-        check_df = check_df.loc[check_df['latitude'].isna()]
-        check_df.drop(columns=response_columns, inplace=True)
-        check_df = geocode_df(check_df, print_errors=True)
+    if CHECK_ALL:
+        # repeat the process
+        if len(check_df) > 0:
+            check_df = check_df.loc[check_df['latitude'].isna()]
+            check_df.drop(columns=response_columns, inplace=True)
+            check_df = geocode_df(check_df, print_errors=True)
 # %%
 
 if __name__ == '__main__':
-    if len(check_df) > 0:
-        # try and debug individual addr esses
-        check_row = check_df.iloc[0]
-        # check_row = check_df.loc[167]
-        param_check = {
-            'houseNumber': check_row['house_number'], 'street': check_row['street_name'], 
-            'borough': check_row['borough'], 'zip': check_row['zip']
-        }
-        param_check = {
-            'houseNumber': '46B', 'street': 'circle loop', 
-            'borough': 'staten island', 'zip': '10304'  
+    if CHECK_ALL:
+        if len(check_df) > 0:
+            # try and debug individual addr esses
+            check_row = check_df.iloc[0]
+            # check_row = check_df.loc[167]
+            param_check = {
+                'houseNumber': check_row['house_number'], 'street': check_row['street_name'], 
+                'borough': check_row['borough'], 'zip': check_row['zip']
+            }
+            param_check = {
+                'houseNumber': '46B', 'street': 'circle loop', 
+                'borough': 'staten island', 'zip': '10304'  
 
-        }
-        response = requests.get(
-            BASE_URL, headers=HEADERS, params=param_check, timeout=10)
-        for key, value in response.json()['address'].items():
-            print(f'{key}: {value}')
+            }
+            response = requests.get(
+                BASE_URL, headers=HEADERS, params=param_check, timeout=10)
+            for key, value in response.json()['address'].items():
+                print(f'{key}: {value}')
 
 
-        # df.loc[df['schooldbn'] == '17KBSP', ['address', 'url']]
-        # df.loc[df['schooldbn'] == '24Q019', ['address', 'url']]
-        # df.loc[df['schooldbn'] == '24Z123', ['address', 'url']]
-        # df.loc[df['schooldbn'] == '24Z125', ['address', 'url']]
-        # df.loc[df['schooldbn'] == '26QAJX', ['schooldbn', 'address', 'url']]
-        # df.loc[df['schooldbn'] == '26QBCR', ['schooldbn', 'address', 'url']]
-        # df.loc[df['schooldbn'] == '27H097', ['schooldbn', 'address', 'url']]
-        # df.loc[df['schooldbn'] == '27H110', ['schooldbn', 'address', 'url']]
-        # df.loc[df['schooldbn'] == '28G999', ['schooldbn', 'address', 'url']]
-        # df.loc[df['schooldbn'] == '29QAXD', ['schooldbn', 'address', 'url']]
-        # df.loc[df['schooldbn'] == '29QAXQ', ['schooldbn', 'address', 'url']]
-        # df.loc[df['schooldbn'] == '30H100', ['schooldbn', 'address', 'url']]
-        df.loc[df['schooldbn'] == '31G917', ['schooldbn', 'address', 'url']]
+            # df.loc[df['schooldbn'] == '17KBSP', ['address', 'url']]
+            # df.loc[df['schooldbn'] == '24Q019', ['address', 'url']]
+            # df.loc[df['schooldbn'] == '24Z123', ['address', 'url']]
+            # df.loc[df['schooldbn'] == '24Z125', ['address', 'url']]
+            # df.loc[df['schooldbn'] == '26QAJX', ['schooldbn', 'address', 'url']]
+            # df.loc[df['schooldbn'] == '26QBCR', ['schooldbn', 'address', 'url']]
+            # df.loc[df['schooldbn'] == '27H097', ['schooldbn', 'address', 'url']]
+            # df.loc[df['schooldbn'] == '27H110', ['schooldbn', 'address', 'url']]
+            # df.loc[df['schooldbn'] == '28G999', ['schooldbn', 'address', 'url']]
+            # df.loc[df['schooldbn'] == '29QAXD', ['schooldbn', 'address', 'url']]
+            # df.loc[df['schooldbn'] == '29QAXQ', ['schooldbn', 'address', 'url']]
+            # df.loc[df['schooldbn'] == '30H100', ['schooldbn', 'address', 'url']]
+            df.loc[df['schooldbn'] == '31G917', ['schooldbn', 'address', 'url']]
 
 
 # %%
@@ -551,7 +557,12 @@ def geocode_site_data(
     geo_df = _format_df(
         df, print_output=print_output,
         id_var=id_var, replace_address_dict=replace_address_dict)
-    geo_df = geocode_df(geo_df, print_errors=print_output)
+
+    if print_output:
+        print('\nGeocoding addresses...')
+    geo_df = geocode_df(geo_df, print_errors=False)
+
+    geo_df.rename(columns={'id': 'schooldbn'}, inplace=True)
 
     if save_path is not None:
         geo_df.to_csv(save_path, index=False)
@@ -566,9 +577,9 @@ def merge_geocode(df, geo_df, id_var='schooldbn'):
     Merge geocoded data back onto the original site directory dataframe.
 
     Parameters:
-    - df: original site directory dataframe
-    - geo_df: geocoded dataframe (output of geocode_site_data)
-    - id_var: column used as unique site identifier
+    - df: original site directory dataframe; contains id_var `schooldbn`
+    - id_var: column used as unique site identifier in original site df
+    - geo_df: geocoded dataframe (output of geocode_site_data; contains `id`)
 
     Returns:
     - merge_df: merged dataframe
@@ -597,4 +608,4 @@ if __name__ == '__main__':
     # %%
 
 if __name__ == '__main__':
-    merged_df = merge_geocode(df, geo_df)
+    merge_df = merge_geocode(df, geo_df)
