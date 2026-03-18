@@ -10,8 +10,10 @@ def get_site_data(print_output: bool = False) -> None:
     """
     Get the site data for the specified years and save it to the raw data 
     directory.
+
+    Source: https://infohub.nyced.org/reports/admissions-and-enrollment/directory-data
     """
-    year_list = [2025]
+    year_list = [2019, 2020, 2021, 2022, 2023, 2024, 2025]
 
     for year in year_list:
 
