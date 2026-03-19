@@ -51,7 +51,7 @@ response_columns = [
 
 RUN_ALL = False
 CHECK_ALL = False
-RUN_TEST_ONLY = True
+RUN_TEST_ONLY = False
 print_output = True
 rand_seed = None
 sample_size = 5
