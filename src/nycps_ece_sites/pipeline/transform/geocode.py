@@ -644,14 +644,14 @@ def merge_geocode(df, geo_df, id_var='schooldbn'):
         left=df,
         right=geo_df,
         left_on=id_var,
-        right_on='id',
+        right_on=id_var,
         how='outer',
         validate='m:1',
         indicator=True
     )
 
     assert (merge_df['_merge'] == 'both').all()
-    merge_df.drop(columns=['id', '_merge'], inplace=True)
+    merge_df.drop(columns=['_merge'], inplace=True)
 
     return merge_df
 
