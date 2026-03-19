@@ -39,8 +39,8 @@ response_columns = [
 ]
 # %%'
 
-RUN_ALL = True
-CHECK_ALL = True
+RUN_ALL = False
+CHECK_ALL = False
 print_output = True
 rand_seed = None
 sample_size = 5
