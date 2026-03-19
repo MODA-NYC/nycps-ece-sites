@@ -23,6 +23,7 @@ dependencies = [
     "sodapy>=2.2.0",
     "statsmodels>=0.14.6",
     "tabulate>=0.9.0",
+    "truststore>=0.10.4",
 ]
 
 [project.scripts]

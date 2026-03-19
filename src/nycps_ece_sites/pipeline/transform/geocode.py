@@ -5,6 +5,9 @@ import os
 import time
 
 import requests
+import truststore
+truststore.inject_into_ssl()
+from dotenv import load_dotenv
 
 from nycps_ece_sites.utils import config_paths
 
@@ -13,6 +16,10 @@ import textwrap
 
 RAW_DIR = config_paths.RAW_DATA_DIR
 GEOCODE_DIR = config_paths.GEOCODE_DIR
+ROOT_DIR = config_paths.ROOT_DIR
+
+# Load .env from project root
+load_dotenv(ROOT_DIR / '.env')
 # %%
 
 if __name__ == '__main__':
@@ -23,11 +30,14 @@ if __name__ == '__main__':
 # %% Set up data to Geocode the new data
 
 # Set the headers with the subscription key
-SUBSCRIPTION_KEY = os.getenv('NYC_API')
-HEADERS = {
-    'Cache-Control': 'no-cache',
-    'Ocp-Apim-Subscription-Key': SUBSCRIPTION_KEY
-}
+def _get_headers():
+    key = os.getenv('NYC_API')
+    if key is None:
+        raise ValueError("NYC_API environment variable is not set")
+    return {
+        'Cache-Control': 'no-cache',
+        'Ocp-Apim-Subscription-Key': key,
+    }
 
 # BASE_URL = "https://api.nyc.gov/geo/geoclient/v2/address.json"
 BASE_URL = "https://api.nyc.gov/geoclient/v2/address.json"
@@ -41,6 +51,7 @@ response_columns = [
 
 RUN_ALL = False
 CHECK_ALL = False
+RUN_TEST_ONLY = True
 print_output = True
 rand_seed = None
 sample_size = 5
@@ -449,7 +460,7 @@ def geocode_address(row, return_all=False, print_errors=False):
     }
 
     try:
-        response = requests.get(BASE_URL, headers=HEADERS, params=params, timeout=10)
+        response = requests.get(BASE_URL, headers=_get_headers(), params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
 
@@ -480,7 +491,7 @@ if __name__ == '__main__':
 
     response = geocode_address(test_df.iloc[0], return_all=True)
 
-    test_df[response_columns] = test_df.apply(geocode_address, axis=1)
+    test_df[response_columns] = test_df.apply(geocode_address, axis=1, print_errors=True)
     print_df = test_df[['house_number', 'street_name', 'borough', 'zip'] + response_columns]
     print(tabulate(print_df, headers='keys', showindex=False))
 
@@ -569,7 +580,7 @@ if __name__ == '__main__':
             #     'borough': 'manhattan', 'zip': '10031'  
             # }
             response = requests.get(
-                BASE_URL, headers=HEADERS, params=param_check, timeout=10)
+                BASE_URL, headers=_get_headers(), params=param_check, timeout=10)
             for key, value in response.json()['address'].items():
                 print(f'{key}: {value}')
 
@@ -657,11 +668,24 @@ def merge_geocode(df, geo_df, id_var='schooldbn'):
 
 
 if __name__ == '__main__':
-    geo_df = geocode_site_data(
-        df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True,
-        save_path=GEOCODE_DIR / f'site_dir_geo_{year}.csv')
+    if RUN_TEST_ONLY:
+        test_df = df.sample(5, random_state=2)
+        test_geo_df = geocode_site_data(
+            test_df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True,
+            # save_path=GEOCODE_DIR / f'site_dir_geo_{year}.csv'
+        )
+    else:
+        geo_df = geocode_site_data(
+            df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True,
+            save_path=GEOCODE_DIR / f'site_dir_geo_{year}.csv')
+    
 
     # %%
 
 if __name__ == '__main__':
-    merge_df = merge_geocode(df, geo_df)
+    if RUN_TEST_ONLY:
+        merge_df = merge_geocode(test_df, test_geo_df)
+    else:
+        merge_df = merge_geocode(df, geo_df)
+
+# %%
