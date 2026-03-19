@@ -24,7 +24,8 @@ load_dotenv(ROOT_DIR / '.env')
 
 if __name__ == '__main__':
     # year = 2025
-    year = 2024
+    # year = 2024
+    year = 2023
     df = pd.read_excel(RAW_DIR / f"site_dir_{year}.xlsx")
 
 # %% Set up data to Geocode the new data
@@ -49,8 +50,14 @@ response_columns = [
 ]
 # %%'
 
+# run everything mid-program, before running checks (helpful when debugging
+# an additional year of data and running interactively)
 RUN_ALL = False
+# run checks of geocoded dataframe mid-program. sees if there are missing
+# responses which you can investigate. helpful when debugging an additional
+# year of data and running interactively
 CHECK_ALL = False
+# run the full program for a small dataframe at the end of the program
 RUN_TEST_ONLY = False
 print_output = True
 rand_seed = None
@@ -171,18 +178,74 @@ replace_address_dict_2024 = {
         '471 NORTH GANNON AVENUE, STATEN ISLAND, NY 10314'
     }
 }
+replace_address_dict_2023 = {
+    '05MAWW': {
+        '3333 BROADWAY, MANHATTAN, NY 10031':
+        '3301 BROADWAY, MANHATTAN, NY 10031'
+    },
+    '08G778' : {
+        '2108 LACOMBE AVENUE, BROOKLYN, NY 10473': 
+        '2108 LACOMBE AVENUE, BRONX, NY 10473'
+    },
+    '17KBSP' : {
+        '771 CROWN STREET, NEW YORK, NY 11213':
+        '771 CROWN STREET, BROOKLYN, NY 11213'
+    },
+    '24Z123' : {
+        '54-25 101 STREET, NEW YORK, NY 11368':
+        '54-25 101st STREET, QUEENS, NY 11368'
+    },
+    '24Z124': {
+        '104-04 CORONA AVENUE, NEW YORK, NY 11368':
+        '104-04 CORONA AVENUE, QUEENS, NY 11368'
+    },
+    '24Z125': {
+        '108-18 ROOSEVELT AVENUE, NEW YORK, NY 11368':
+        '108-18 ROOSEVELT AVENUE, QUEENS, NY 11368'
+    },
+    '26QAJX' : {
+        '238-10 HILLSIDE AVENUE BELLEROSE, QUEENS, NY 11427':
+        '238-10 HILLSIDE AVENUE, QUEENS, NY 11427'
+    },
+    '26QBCR' : {
+        '86-29 COMMONWEATH BOULEVARD, ,BELLEROSE, NY 11426':
+        '86-29 COMMONWEALTH BOULEVARD, QUEENS, NY 11426'
+    },
+    '29QAXD': {
+        '10960 202ND STREET, ST. ALBANS, NY 11412':
+        '109-60 202ND STREET, Queens, NY 11412'
+    },
+    '29QAXQ': {
+        '90-04 175TH STEET, QUEENS, NY 11432':
+        '90-04 175TH STREET, QUEENS, NY 11432'
+    },
+    '31RAKL': {
+        '471 NORTH GANNON AVENUE STATEN ISLAND NEW YORK 10314, STATEN ISLAND, NY 10314':
+        '471 NORTH GANNON AVENUE, STATEN ISLAND, NY 10314'
+    },
+    '28G999': {
+        '102-35 63 ROAD DR, QUEENS, NY 11375':
+        '102-35 63 RD, QUEENS, NY 11375'
+    },
+    '31G917': {
+        '46 B CIRCLE LOOP, STATEN ISLAND, NY 10304':
+        '46B CIRCLE LOOP, STATEN ISLAND, NY 10304'
+    }
+}
+replace_address_dict_2022 = {}
+replace_address_dict_2021 = {}
+replace_address_dict_2020 = {}
+replace_address_dict_2019 = {}
 
 # lookup: year -> address replacement dict
 REPLACE_ADDRESS_DICTS = {
     2025: replace_address_dict_2025,
     2024: replace_address_dict_2024,
-    2023: {},
-    2022: {},
-    2021: {},
-    2020: {},
-    2019: {},
-    # add future years here, e.g.:
-    # 2026: replace_address_dict_2026,
+    2023: replace_address_dict_2023,
+    2022: replace_address_dict_2022,
+    2021: replace_address_dict_2021,
+    2020: replace_address_dict_2020,
+    2019: replace_address_dict_2019,
 }
 
 def replace_address(df, replace_dict, id_var='id', print_output=False):
