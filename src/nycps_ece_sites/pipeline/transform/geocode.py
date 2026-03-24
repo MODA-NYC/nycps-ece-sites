@@ -25,7 +25,8 @@ load_dotenv(ROOT_DIR / '.env')
 if __name__ == '__main__':
     # year = 2025
     # year = 2024
-    year = 2023
+    # year = 2023
+    year = 2022
     df = pd.read_excel(RAW_DIR / f"site_dir_{year}.xlsx")
 
 # %% Set up data to Geocode the new data
@@ -232,7 +233,40 @@ replace_address_dict_2023 = {
         '46B CIRCLE LOOP, STATEN ISLAND, NY 10304'
     }
 }
-replace_address_dict_2022 = {}
+replace_address_dict_2022 = {
+    '05MAWW': {
+        '3333 BROADWAY, MANHATTAN, NY 10031':
+        '3301 BROADWAY, MANHATTAN, NY 10031'
+    },
+    '17KBSP' : {
+        '771 CROWN STREET, NEW YORK, NY 11213':
+        '771 CROWN STREET, BROOKLYN, NY 11213'
+    },
+    '24Z123' : {
+        '54-25 101 STREET, NEW YORK, NY 11368':
+        '54-25 101st STREET, QUEENS, NY 11368'
+    },
+    '24Z124': {
+        '104-04 CORONA AVENUE, NEW YORK, NY 11368':
+        '104-04 CORONA AVENUE, QUEENS, NY 11368'
+    },
+    '24Z125': {
+        '108-18 ROOSEVELT AVENUE, NEW YORK, NY 11368':
+        '108-18 ROOSEVELT AVENUE, QUEENS, NY 11368'
+    },
+    '26QAJX' : {
+        '238-10 HILLSIDE AVENUE BELLEROSE, QUEENS, NY 11427':
+        '238-10 HILLSIDE AVENUE, QUEENS, NY 11427'
+    },
+'29QAXQ': {
+        '90-04 175TH STEET, QUEENS, NY 11432':
+        '90-04 175TH STREET, QUEENS, NY 11432'
+    },
+    '31RAKL': {
+        '471 NORTH GANNON AVENUE STATEN ISLAND NEW YORK 10314, STATEN ISLAND, NY 10314':
+        '471 NORTH GANNON AVENUE, STATEN ISLAND, NY 10314'
+    },
+}
 replace_address_dict_2021 = {}
 replace_address_dict_2020 = {}
 replace_address_dict_2019 = {}
@@ -610,10 +644,10 @@ if __name__ == '__main__':
     if CHECK_ALL: 
         if len(check_df) > 0:
             check_df = replace_address(
-                df=check_df, id_var='id', 
+                df=check_df, id_var='schooldbn', 
                 replace_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True)
 
-            check_df = _00_set_up_geocode_df(check_df, id_var=['id'])
+            check_df = _00_set_up_geocode_df(check_df, id_var=['schooldbn'])
             check_df = _01_replace_borough(check_df, print_output=True)
             check_df = _02_format_zip(check_df, print_output=True)
             check_df = geocode_df(check_df, print_errors=True)
@@ -625,7 +659,10 @@ if __name__ == '__main__':
         if len(check_df) > 0:
             check_df = check_df.loc[check_df['latitude'].isna()]
             check_df.drop(columns=response_columns, inplace=True)
-            check_df = geocode_df(check_df, print_errors=True)
+            if len(check_df) > 0:
+                check_df = geocode_df(check_df, print_errors=True)
+            else:
+                print('`check_df` has 0 obs.')
 # %%
 
 if __name__ == '__main__':
