@@ -1,3 +1,52 @@
+Update CLAUDE.md to reflect what we just did. We need to pick back up with 2020 data soon.
+
+********************************************************************************
+
+Proposed corrections for 2021
+
+schooldbn | raw address | update
+  │ 06MBIY    │ 508 WEST 117TH STREET, MANHATTAN, NY 10032 │ 508 WEST 171 STREET, MANHATTAN, NY 10032 
+  │ 11XBTC    │ 2360 RAYMOND AVENUE, BRONX, NY 10462       | 2360 SAINT RAYMOND AVENUE, BRONX, NY 10462 
+  │ 25H531    │ 114-06 68TH DRIVE, QUEENS, NY 11367  | 114-06 68TH DRIVE, QUEENS, NY 11367   
+  │ 28H544    │ 88-18 139TH AVENUE, QUEENS, NY 11435 | 88-18 139TH STREET, QUEENS, NY 11435    
+
+********************************************************************************
+Proposed corrections for groups 1-6 look correct. Here are the updated address for Group 7. Please take a look at these updates and think if they are reasonable. If so, you can go ahead and add `replace_address_dict_2021` to `geocode.py`.
+
+schooldbn | raw address | update
+06H473 | 43877 MAGAW PLACE, MANHATTAN, NY 10033 | 2 Magaw Place, MANHATTAN, NY 10033
+06MBPS | 1319 CUMMING STREET, MANHATTAN, NY 10034 | 13-19 CUMMING STREET, MANHATTAN, NY 10034
+06MBZO | 4966 BROADWAY AVE, MANHATTAN, NY 10034 | BROADWAY AVE should probably be BROADWAY
+08XBKN | 1C HOE AVE, BRONX, NY 10459 | 1022 HOE AVE, BRONX, NY 10459
+09XBGM | 124 EAST 176 ST. ST., BRONX, NY 10453 | 124 EAST 176 ST, BRONX, NY 10453
+10H492 | 43841 MARBLE HILL AVENUE, BRONX, NY 10463 | 1-11 MARBLE HILL AVENUE, BRONX, NY 10463
+10XBVM | 30 W APT 190TH ST, BRONX, NY 10468 | 30 W 190th St, Bronx, NY 10468
+11XBTC | 2360 ST. RAYMOND STREET, BRONX, NY 10462 | 2360 RAYMOND Avenue, BRONX, NY 10462
+12XBXU | 982 A ROGERS PLACE, BRONX, NY 10459 | 982 A ROGERS PLACE, BRONX, NY 10459
+12XBZV | 44315 ROSEDALE AVENUE, BRONX, NY 10472 | 1215 ROSEDALE AVENUE, BRONX, NY 10472
+24QBTJ | 94-02 42ND AVE 94TH ST 3 FL, QUEENS, NY 11373 | 94-02 42ND AVE 94TH ST, QUEENS, NY 11373
+25H531 | 11406 68TH DRIVE, QUEENS, NY 11367 | 114-06 68TH DRIVE, QUEENS, NY 11367
+25QBVD | 73- 46 VLEIGH PLACE, QUEENS, NY 11367 | 73-46 VLEIGH PLACE, QUEENS, NY 11367
+28H543 | 109 77 142ND STREET, QUEENS, NY 11435 | 109-77 142ND STREET, QUEENS, NY 11435
+28QBYQ | 98-58 98TH HORACE HARDING, QUEENS, NY 11374 | 98-58 HORACE HARDING expressway, QUEENS, NY 11374
+29H545 | 1ST FLOOR 243-31 144TH AVENUE, QUEENS, NY 11422 | 243-31 144TH AVENUE, QUEENS, NY 11422
+29QBRJ | 138-06 229ST FLOOR 1ST, QUEENS, NY 11413 | 138-06 229 ST, QUEENS, NY 11413
+29QCEC | 11436 114-36 194TH STREET, QUEENS, NY 11412 | 114-36 194TH STREET, QUEENS, NY 11412
+30QBSU | 44182 30 ROAD, QUEENS, NY 11102 | 12-17 30 Rd, QUEENS, NY 11102
+
+********************************************************************************
+
+Geocode years 2019, 2020, and 2021. Review `CLAUDE.md`, specifically "1. Geocode remaining years (2019, 2020, 2021)". Look at how `geocode.py` handles those years — the address correction dicts for 2019-2021 are currently empty. The pipeline already works for 2022-2025. Start by geocoding 2021 and let me review the results (especially any rows with missing lat/lon) before moving to the next year. I may need to add address corrections. I'll eventually want to develop the appropriate address correction dictionary (`replace_address_dict_2021`), that should take the format:
+```
+    'SCHOOLDBN': {
+        'INCORRECT ADDRESS':
+        'ASSUMED CORRECT ADDRESS'
+    },
+```
+Wait for my approval before creating any files.   
+
+********************************************************************************
+
 Update CLAUDE.md to reflect what we just did. The test infrastructure now exists — update the repository structure and the testing section to reflect the current state. Show me the diff before applying.
 
 ********************************************************************************
