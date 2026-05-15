@@ -1,0 +1,9 @@
+Update CLAUDE.md to reflect what we just did. The test infrastructure now exists — update the repository structure and the testing section to reflect the current state. Show me the diff before applying.
+
+********************************************************************************
+
+/plan                                                                                                                                                                                                                 
+                                                                                                                                                                                                                        
+We need to set up the test infrastructure for this project. Start by creating the tests/ directory with a conftest.py and a first test file for the geocode formatting functions. Before writing any code, propose: (1) 
+ what the conftest.py fixtures should look like (small hand-built DataFrames that mimic the raw site data structure), and (2) which tests you'd write first from the "Validation checks to migrate" section in          
+CLAUDE.md. Wait for my approval before creating any files.   

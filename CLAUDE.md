@@ -37,7 +37,9 @@ nycps-ece-sites/
 │   │       └── geocode.py      # Address correction + NYC GeoClient geocoding
 │   └── utils/
 │       └── config_paths.py     # Project root detection + path constants
-└── tests/                      # Does not exist yet
+└── tests/
+    ├── conftest.py              # Fixtures: raw_site_df, formatted_geo_df
+    └── test_geocode_format.py  # Geocode formatting function tests
 ```
 
 ## Data overview
@@ -79,17 +81,11 @@ These should follow the existing pattern: functions that take a DataFrame and re
 
 ### 3. Testing (`tests/`)
 
-No tests exist yet. The codebase already contains validation logic — it's just scattered across `if __name__ == '__main__'` blocks and `notebooks/explore.py` as inline assertions and print-and-inspect patterns. The first step in building the test suite is migrating these existing checks into `pytest`, then expanding from there.
+Use `pytest` (`uv run pytest`). Keep tests simple and focused. Test data should use small fixtures (hand-built DataFrames with a few rows), not the full dataset. Tests should not call the GeoClient API.
 
-Use `pytest`. Keep tests simple and focused. Test data should use small fixtures (hand-built DataFrames with a few rows), not the full dataset. Tests should not call the GeoClient API.
+Fixtures live in `tests/conftest.py`: `raw_site_df` (mimics raw xlsx input) and `formatted_geo_df` (mimics output of `_00_set_up_geocode_df`, used as input for `_01`/`_02`). Note: `borough_list` is defined inside `_01_replace_borough`, not at module level — borough tests assert on known expected values rather than importing the list.
 
-#### Validation checks to migrate from existing code
-
-**From `geocode.py` — formatting functions:**
-- After `_00_set_up_geocode_df`: output has expected columns (`id`, `address`, `borough`, `zip`, `house_number`, `street_name`); no duplicates on `id`
-- After `_01_replace_borough`: all borough values are in the accepted geoclient borough list
-- After `_02_format_zip`: all zip values match the 5-digit pattern (original data has format `NY XXXXX`; after formatting, just `XXXXX`)
-- `replace_address`: when given a known correction dict, the address is actually replaced in the output
+#### Remaining validation checks to migrate
 
 **From `geocode.py` — geocode and merge:**
 - `geocode_df`: output contains the expected response columns (`latitude`, `longitude`, `xCoordinate`, `yCoordinate`, `communityDistrict`)
