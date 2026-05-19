@@ -25,7 +25,7 @@ nycps-ece-sites/
 ├── README.md
 ├── data/
 │   ├── raw/                    # Site directory xlsx files (2019-2025)
-│   └── geocode/                # Geocoded CSVs (2021-2025 exist; 2019-2020 missing)
+│   └── geocode/                # Geocoded CSVs (2019-2025)
 ├── notebooks/
 │   └── explore.py              # Interactive exploration script
 ├── src/nycps_ece_sites/
@@ -49,14 +49,17 @@ nycps-ece-sites/
 **Geocoded data** (`data/geocode/site_dir_geo_{year}.csv`): Produced by the geocode pipeline. Columns: `schooldbn`, `address`, `borough`, `zip`, `house_number`, `street_name`, `latitude`, `longitude`, `xCoordinate`, `yCoordinate`, `communityDistrict`. One row per unique address (deduplicated from the raw data, which can have multiple rows per schooldbn due to admission_process).
 
 **Key facts:**
-- Year 2019 has been geocoded (1,856/1,856 rows, all complete)
-- Year 2020 has been geocoded (1,865/1,865 rows, all complete)
-- Year 2021 has been geocoded (3,013/3,014 rows; `25H531` is a permanent GeoClient failure — "ADDRESS NUMBER OUT OF RANGE")
-- Years 2022-2025 have both raw and geocoded data
+- Year 2019 geocoded: 1,856/1,856 rows complete
+- Year 2020 geocoded: 1,865/1,865 rows complete
+- Year 2021 geocoded: 3,013/3,014 rows complete; `25H531` is a permanent GeoClient failure ("ADDRESS NUMBER OUT OF RANGE")
+- Year 2022 geocoded: 1,960/1,968 rows complete; 8 permanent GeoClient failures (`05MAWW`, `17KBSP`, `24Z123`, `24Z124`, `24Z125`, `26QAJX`, `29QAXQ`, `31RAKL`)
+- Year 2023 geocoded: 3,769/3,769 rows complete
+- Year 2024 geocoded: 3,207/3,208 rows complete; `24Z124` is a permanent GeoClient failure
+- Year 2025 geocoded: 3,630/3,630 rows complete
 - The data is unique at the (`schooldbn`, `admission_process`) level
 - Each `schooldbn` has exactly one address (verified)
-- Column counts vary by year: 2019 (176), 2020 (183), 2021 (177), 2022 (129), 2023-2025 (167)
-- Row counts: 2019 (3,057), 2020 (3,133), 2021 (4,799), 2022 (3,967), 2023 (5,911), 2024 (5,335), 2025 (5,781)
+- Column counts vary by year: 2019 (176), 2020 (183), 2021 (177), 2022 (129), 2023–2025 (167)
+- Raw row counts: 2019 (3,057), 2020 (3,133), 2021 (4,799), 2022 (3,967), 2023 (5,911), 2024 (5,335), 2025 (5,781)
 - `admission_process` values are always: 3K, PK, K
 
 ## Current state and remaining work
