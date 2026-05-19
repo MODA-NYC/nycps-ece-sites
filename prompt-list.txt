@@ -1,3 +1,31 @@
+********************************************************************************
+
+1. Approve (a)
+2. Confirmed
+3. Pipeline fix
+4. See updates. Note that the "Current address" you provided did not have the full address (including zip code). Make sure that the data dictionary `replace_address_dict_2020` so that it reflects the full address for geocoding.
+
+| schooldbn | Current address                         | update
+│ 09XATF    │ 1500 MORRIS AVE 2ND FL #3, BRONX        │ 1500 MORRIS AVE, BRONX
+│ 10XATD    │ 2010 SEDGWICK, BRONX                    │ 2010 SEDGWICK Ave, BRONX
+│ 23KBRT    │ 280 RIVERDALE AVENUE, BROOKLYN          │ 280 RIVERDALE AVENUE, BROOKLYN
+│ 29QBIX    │ 201 02-04 LINDEN BOULEVARD, KEW GARDENS │ 201-02 LINDEN BOULEVARD, KEW GARDENS
+│ 31RAFN    │ 1298 WOODROW RAD, STATEN ISLAND         │ 1298 WOODROW ROAD, STATEN ISLAND            
+
+
+********************************************************************************
+
+Geocode years 2019 and 2020. Review `CLAUDE.md`, specifically  "1. Geocode remaining years (2019, 2020)". Look at how `geocode.py` handles those years — the address correction dicts for 2019-2020 are currently empty. The pipeline already works for 2021-2025. Start by geocoding 2020 and let me review the results (especially any rows with missing lat/lon) before moving to the next year. I may need to add address corrections. I'll eventually want to develop the appropriate address correction dictionary (`replace_address_dict_2020`), that should take the format:
+```
+    'SCHOOLDBN': {
+        'INCORRECT ADDRESS':
+        'ASSUMED CORRECT ADDRESS'
+    },
+```
+Wait for my approval before creating any files.   
+
+********************************************************************************
+
 Update CLAUDE.md to reflect what we just did. We need to pick back up with 2020 data next week.
 
 ********************************************************************************

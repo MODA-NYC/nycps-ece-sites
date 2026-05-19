@@ -66,8 +66,6 @@ nycps-ece-sites/
 
 ### 1. Geocode all years — COMPLETE
 
-All years geocoded: 2019 (1,856 rows), 2020 (1,865), 2021 (3,014; one permanent failure: `25H531`), 2022–2025. Address correction dicts are populated in `geocode.py` for all years.
-
 When adding corrections for a new year, the process requires the NYC GeoClient API key in `.env`. Ensure the format is:
 ```
     # url
