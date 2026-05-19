@@ -49,7 +49,8 @@ nycps-ece-sites/
 **Geocoded data** (`data/geocode/site_dir_geo_{year}.csv`): Produced by the geocode pipeline. Columns: `schooldbn`, `address`, `borough`, `zip`, `house_number`, `street_name`, `latitude`, `longitude`, `xCoordinate`, `yCoordinate`, `communityDistrict`. One row per unique address (deduplicated from the raw data, which can have multiple rows per schooldbn due to admission_process).
 
 **Key facts:**
-- Years 2019, 2020 have raw data but have NOT been geocoded yet
+- Year 2019 has been geocoded (1,856/1,856 rows, all complete)
+- Year 2020 has been geocoded (1,865/1,865 rows, all complete)
 - Year 2021 has been geocoded (3,013/3,014 rows; `25H531` is a permanent GeoClient failure — "ADDRESS NUMBER OUT OF RANGE")
 - Years 2022-2025 have both raw and geocoded data
 - The data is unique at the (`schooldbn`, `admission_process`) level
@@ -60,13 +61,11 @@ nycps-ece-sites/
 
 ## Current state and remaining work
 
-### 1. Geocode remaining years (2019, 2020)
+### 1. Geocode all years — COMPLETE
 
-**2021 is complete.** `data/geocode/site_dir_geo_2021.csv` exists with 3,014 rows and a fully-populated `replace_address_dict_2021` (62 entries) in `geocode.py`. One permanent failure: `25H531` (`114-06 68TH DRIVE, QUEENS, NY 11367`) — GeoClient returns "ADDRESS NUMBER OUT OF RANGE".
+All years geocoded: 2019 (1,856 rows), 2020 (1,865), 2021 (3,014; one permanent failure: `25H531`), 2022–2025. Address correction dicts are populated in `geocode.py` for all years.
 
-**Next up: 2020.** `replace_address_dict_2020` is currently empty `{}` in `geocode.py`. Process: set `year = 2020`, run the full geocode, review missing rows, populate the dict, iterate.
-
-The geocode pipeline exists and works. Address correction dicts for these years exist in `geocode.py` (they're empty for 2019-2020, but should be populated if geocoding reveals errors). The process requires the NYC GeoClient API key in `.env`. When creating new address correction dicts, ensure that the format is:
+When adding corrections for a new year, the process requires the NYC GeoClient API key in `.env`. Ensure the format is:
 ```
     # url
     'SCHOOLDBN': {

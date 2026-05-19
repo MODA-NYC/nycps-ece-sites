@@ -517,8 +517,184 @@ replace_address_dict_2021 = {
         '4 STEUBEN STREET, STATEN ISLAND, NY 10304'
     },
 }
-replace_address_dict_2020 = {}
-replace_address_dict_2019 = {}
+replace_address_dict_2020 = {
+    # https://maps.app.goo.gl/...
+    '05MAWW': {
+        '3333 BROADWAY, NEW YORK, NY 10031':
+        '3301 BROADWAY, MANHATTAN, NY 10031'
+    },
+    '09XATF': {
+        '1500 MORRIS AVE 2ND FL #3, BRONX, NY 10457':
+        '1500 MORRIS AVE, BRONX, NY 10457'
+    },
+    '10XATD': {
+        '2010 SEDGWICK, BRONX, NY 10468':
+        '2010 SEDGWICK AVENUE, BRONX, NY 10468'
+    },
+    '17KBSP': {
+        '771 CROWN STREET, NEW YORK, NY 11213':
+        '771 CROWN STREET, BROOKLYN, NY 11213'
+    },
+    '19KBPJ': {
+        '125 SCHROOEDERS AVENUE, BROOKLYN, NY 11239':
+        '125 SCHROEDERS AVENUE, BROOKLYN, NY 11239'
+    },
+    '21KBUR': {
+        '228 AVENUE U,BROOKLYN,NY 11223, NEW YORK, NY 11223':
+        '228 AVENUE U, BROOKLYN, NY 11223'
+    },
+    '21KCTI': {
+        '2167 CONEY ISLAND AVENUE,BROOKLYN,NY 11223, NEW YORK, NY 11223':
+        '2167 CONEY ISLAND AVENUE, BROOKLYN, NY 11223'
+    },
+    '21KCUH': {
+        '104 WEST END AVENUE,BROOKLYN,NY 11235, NEW YORK, NY 11235':
+        '104 WEST END AVENUE, BROOKLYN, NY 11235'
+    },
+    '22KANR': {
+        '2810 NOSTRAND AVENUE,BROOKLYN,NY 11229, NEW YORK, NY 11229':
+        '2810 NOSTRAND AVENUE, BROOKLYN, NY 11229'
+    },
+    '22KCRU': {
+        '2150 OCEAN AVENUE, 2ND FLOOR,BROOKLYN,NY 11229, NEW YORK, NY 11229':
+        '2150 OCEAN AVENUE, BROOKLYN, NY 11229'
+    },
+    '22KCUL': {
+        '2484 EAST 18 STREET,BROOKLYN,NY 11235, NEW YORK, NY 11235':
+        '2484 EAST 18 STREET, BROOKLYN, NY 11235'
+    },
+    '23KBRT': {
+        '280 RIVERDALE AVENUE 1, BROOKLYN, NY 11212':
+        '280 RIVERDALE AVENUE, BROOKLYN, NY 11212'
+    },
+    '24QAGW': {
+        '95-15 HORACE HARDING EXPRESSWAY CORONA, CORONA, NY 11368':
+        '95-15 HORACE HARDING EXPRESSWAY, QUEENS, NY 11368'
+    },
+    '24QBFB': {
+        '81-15 QUEENS BOULEVARD,ELMHURST,NY 11373, NEW YORK, NY 11373':
+        '81-15 QUEENS BOULEVARD, QUEENS, NY 11373'
+    },
+    '24Z104': {
+        '41-15 104 STREET, NEW YORK, NY 11368':
+        '41-15 104 STREET, QUEENS, NY 11368'
+    },
+    '24Z105': {
+        '109-10 47 AVENUE, NEW YORK, NY 11368':
+        '109-10 47 AVENUE, QUEENS, NY 11368'
+    },
+    '24Z106': {
+        '80-55 CORNISH AVENUE, NEW YORK, NY 11373':
+        '80-55 CORNISH AVENUE, QUEENS, NY 11373'
+    },
+    '24Z123': {
+        '54-25 101 STREET, NEW YORK, NY 11368':
+        '54-25 101st STREET, QUEENS, NY 11368'
+    },
+    '24Z124': {
+        '104-04 CORONA AVENUE, NEW YORK, NY 11368':
+        '104-04 CORONA AVENUE, QUEENS, NY 11368'
+    },
+    '24Z125': {
+        '108-18 ROOSEVELT AVENUE, NEW YORK, NY 11368':
+        '108-18 ROOSEVELT AVENUE, QUEENS, NY 11368'
+    },
+    '29QAXN': {
+        '19503 LINDEN BOULEVARD, St. Albans, NY 11412':
+        '195-03 LINDEN BOULEVARD, QUEENS, NY 11412'
+    },
+    '29QBIX': {
+        '201 02-04 LINDEN BOULEVARD, KEW GARDENS, NY 11412':
+        '201-02 LINDEN BOULEVARD, KEW GARDENS, NY 11412'
+    },
+    '31RAFN': {
+        '1298 WOODROW RAD, STATEN ISLAND, NY 10309':
+        '1298 WOODROW ROAD, STATEN ISLAND, NY 10309'
+    },
+}
+replace_address_dict_2019 = {
+    # https://maps.app.goo.gl/...
+    '05MAWW': {
+        '3333 Broadway, New York, NY 10031':
+        '3301 BROADWAY, MANHATTAN, NY 10031'
+    },
+    '10XATD': {
+        '2010 Sedgwick, Bronx, NY 10468':
+        '2010 SEDGWICK AVENUE, BRONX, NY 10468'
+    },
+    '19KBPJ': {
+        '125 Schrooeders Avenue, Brooklyn, NY 11239':
+        '125 SCHROEDERS AVENUE, BROOKLYN, NY 11239'
+    },
+    '23KBRT': {
+        '280 Riverdale Avenue 1, Brooklyn, NY 11212':
+        '280 RIVERDALE AVENUE, BROOKLYN, NY 11212'
+    },
+    '24QAGW': {
+        '95-15 Horace Harding Expressway Corona, Corona, NY 11368':
+        '95-15 HORACE HARDING EXPRESSWAY, QUEENS, NY 11368'
+    },
+    '24Z104': {
+        '41-15 104 Street, New York, NY 11368':
+        '41-15 104 STREET, QUEENS, NY 11368'
+    },
+    '24Z105': {
+        '109-10 47 Avenue, New York, NY 11368':
+        '109-10 47 AVENUE, QUEENS, NY 11368'
+    },
+    '24Z106': {
+        '80-55 Cornish Avenue, New York, NY 11373':
+        '80-55 CORNISH AVENUE, QUEENS, NY 11373'
+    },
+    '24Z123': {
+        '54-25 101 Street, New York, NY 11368':
+        '54-25 101st STREET, QUEENS, NY 11368'
+    },
+    '24Z124': {
+        '104-04 Corona Avenue, New York, NY 11368':
+        '104-04 CORONA AVENUE, QUEENS, NY 11368'
+    },
+    '24Z125': {
+        '108-18 Roosevelt Avenue, New York, NY 11368':
+        '108-18 ROOSEVELT AVENUE, QUEENS, NY 11368'
+    },
+    '29QBIX': {
+        '201 02-04 Linden Boulevard, Kew Gardens, NY 11412':
+        '201-02 LINDEN BOULEVARD, KEW GARDENS, NY 11412'
+    },
+    '31RAFN': {
+        '1298 Woodrow Rad, Staten Island, NY 10309':
+        '1298 WOODROW ROAD, STATEN ISLAND, NY 10309'
+    },
+    '21KBUR': {
+        '228 Avenue U,Brooklyn,Ny 11223, New York, NY 11223':
+        '228 AVENUE U, BROOKLYN, NY 11223'
+    },
+    '21KCTI': {
+        '2167 Coney Island Avenue,Brooklyn,Ny 11223, New York, NY 11223':
+        '2167 CONEY ISLAND AVENUE, BROOKLYN, NY 11223'
+    },
+    '21KCUH': {
+        '104 West End Avenue,Brooklyn,Ny 11235, New York, NY 11235':
+        '104 WEST END AVENUE, BROOKLYN, NY 11235'
+    },
+    '22KANR': {
+        '2810 Nostrand Avenue,Brooklyn,Ny 11229, New York, NY 11229':
+        '2810 NOSTRAND AVENUE, BROOKLYN, NY 11229'
+    },
+    '22KCRU': {
+        '2150 Ocean Avenue, 2Nd Floor,Brooklyn,Ny 11229, New York, NY 11229':
+        '2150 OCEAN AVENUE, BROOKLYN, NY 11229'
+    },
+    '22KCUL': {
+        '2484 East 18 Street,Brooklyn,Ny 11235, New York, NY 11235':
+        '2484 EAST 18 STREET, BROOKLYN, NY 11235'
+    },
+    '24QBFB': {
+        '81-15 Queens Boulevard,Elmhurst,Ny 11373, New York, NY 11373':
+        '81-15 QUEENS BOULEVARD, QUEENS, NY 11373'
+    },
+}
 
 # lookup: year -> address replacement dict
 REPLACE_ADDRESS_DICTS = {
@@ -694,10 +870,30 @@ def _01_replace_borough(geo_df, print_output=False):
         'howard beach': 'queens', 
         'richmond hill': 'queens', 
         'kew gardens': 'queens',
-        'saint albans': 'queens', 
-        'springfield gardens': 'queens', 
+        'saint albans': 'queens',
+        'springfield gardens': 'queens',
         'queens village': 'queens',
         'rockaway park': 'queens',
+        'the bronx': 'bronx',
+        'corona': 'queens',
+        'rego park': 'queens',
+        'forest hills': 'queens',
+        'woodside': 'queens',
+        'sunnyside': 'queens',
+        'jackson heights': 'queens',
+        'far rockaway': 'queens',
+        'ozone park': 'queens',
+        'woodhaven': 'queens',
+        'fresh meadows': 'queens',
+        'little neck': 'queens',
+        'hollis': 'queens',
+        'rosedale': 'queens',
+        'cambria heights': 'queens',
+        'south richmond hill': 'queens',
+        'glen oaks': 'queens',
+        'college point': 'queens',
+        'whitestone': 'queens',
+        'arverne': 'queens',
     }
     geo_df['borough'] = geo_df['borough'].str.lower().replace(replace_dict)
 
