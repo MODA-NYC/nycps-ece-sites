@@ -1,5 +1,14 @@
+Currently, the data in each raw data file is unqiue by `schooldbn` and `admissions_process` Each schooldbn + admissions process has up to 7 program codes in the columns ['code_prog1', 'code_prog2', 'code_prog3', 'code_prog4', 'code_prog5', 'code_prog6', 'code_prog7']. There are other variables affiliated with each program code. these include 
+I want to work on a dataset that is by program code, not by schooldbn and admissions_process. They are matched to a program code N through the variables that have the suffix `_progN` (i.e. there are 7 "admissionmethod_progN" variables, where "N" corresopnds to the program code from `code_progN`). I want a final dataframe that has a column for `schooldbn`, a column for `admissions_process, and then a column for the value of program code (not 1-7, but the actual string value of the program code). There should then be a column for each of the variables that end in `_progN`, and should be filled in accordingly. Please confirm you understand, we can write this in `program_code_reshape.py`
+
+********************************************************************************
+
+[discarded]
 /plan                                                                                                          
 I need to finish generating dataframes with geocoded site data. Review `CLAUDE.md` and `transform\geocode.py`. The geocoded site data is saved by year in `data\geocode\`.
+
+We need to merge these geocoded data back into the original dataframe. Review the current structure, and current data. Plan on the best, most parsimonious way to merge the existing site data back into the dataframe. 
+Notice that the geocoded data is unique to sites. 
 
 ********************************************************************************
 
