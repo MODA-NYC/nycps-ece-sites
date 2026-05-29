@@ -1,3 +1,6 @@
+/plan                                                                                                          
+I need to finish generating dataframes with geocoded site data. Review `CLAUDE.md` and `transform\geocode.py`. The geocoded site data is saved by year in `data\geocode\`.
+
 ********************************************************************************
 
 1. Approve (a)
