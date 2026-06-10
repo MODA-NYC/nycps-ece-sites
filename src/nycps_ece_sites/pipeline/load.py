@@ -25,7 +25,9 @@ def load_sites(years):
     pieces = []
     for year in years:
         path = _TRANSFORMED_DIR / f'site_dir_{year}.parquet'
-        pieces.append(pd.read_parquet(path))
+        df = pd.read_parquet(path)
+        df['year'] = year
+        pieces.append(df)
 
     return pd.concat(pieces, ignore_index=True)
 
