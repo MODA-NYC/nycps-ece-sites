@@ -80,6 +80,7 @@ This will allow me to manually test your results using google maps.
 
 Two new transform modules are needed:
 - **Filter/select**: Reduce the raw 167-column data to only the columns needed for the forecasting use case. I will specify which columns later.
+- **Reshape program codes**: Program codes and relevant variables are wide in the data. They need to be reshaped.
 - **Merge geo**: Join the geocoded lat/lon/community district onto the filtered site data.
 
 These should follow the existing pattern: functions that take a DataFrame and return a DataFrame, with a `print_output` parameter for progress logging.

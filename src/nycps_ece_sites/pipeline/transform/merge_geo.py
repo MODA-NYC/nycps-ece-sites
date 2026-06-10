@@ -51,6 +51,7 @@ def merge_geo(year, print_output=False):
 
 # %%
 
-merge_geo('2019', print_output=True)
+if __name__ == '__main__':
+    merge_geo('2019', print_output=True)
 
 # %%

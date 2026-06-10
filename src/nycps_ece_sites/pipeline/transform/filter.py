@@ -5,7 +5,7 @@ from nycps_ece_sites.utils import config_paths
 
 RAW_DIR = config_paths.RAW_DATA_DIR
 
-year = 2025
+year = 2024
 raw_df = pd.read_excel(RAW_DIR / f'site_dir_{year}.xlsx')
 
 priority_cols = raw_df.columns[raw_df.columns.str.contains('priority')]
