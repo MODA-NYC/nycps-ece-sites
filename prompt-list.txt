@@ -1,3 +1,22 @@
+********************************************************************************
+
+I'd like to finish the transform step of this process. First, review `CLAUDE.md`, and `src/nycps_ece_sites/pipeline/transform`. Note that we have:
+* Successfully geocoding addresses for all years in `geocode.py`
+* Can merge these geocoded values back into the site dataframe on `schooldbn` using `merge_geo.py`
+* Can reshape the data so it is in long format by program code in `program_code_reshape.py`. 
+I would like to now create the main transform file `transform/main.py` to coordinate these steps. The structure should be akin to that of `src/nycps_ece_sites/pipeline/extract.py`, but it should NOT re-run geocoding by default. That is a very time intensive process.
+
+The first thing to review
+1. Is this a good plan? Is there an alternative structure you propose, given that we do not want to re-run geocoding in `transform/main.py` by default? 
+2. Check that these steps make sense, and the files seem reasonable.
+3. Confirm the shape of the final output. This may involve some back and forth and additional feedback on my end.
+3. Write `transform/main.py` to coordinate these steps.
+4. Create `src/nycps_ece_sites/pipeline/run_all.py` to coordinate these steps (but again, we shouldn't run geocoding by default, right now)
+
+After this is complete, we'll work on the load step. Only go step-by-step; do not jump ahead without my permission. Do not write code without my permission.
+
+********************************************************************************
+
 Currently, the data in each raw data file is unqiue by `schooldbn` and `admissions_process` Each schooldbn + admissions process has up to 7 program codes in the columns ['code_prog1', 'code_prog2', 'code_prog3', 'code_prog4', 'code_prog5', 'code_prog6', 'code_prog7']. There are other variables affiliated with each program code. these include 
 I want to work on a dataset that is by program code, not by schooldbn and admissions_process. They are matched to a program code N through the variables that have the suffix `_progN` (i.e. there are 7 "admissionmethod_progN" variables, where "N" corresopnds to the program code from `code_progN`). I want a final dataframe that has a column for `schooldbn`, a column for `admissions_process, and then a column for the value of program code (not 1-7, but the actual string value of the program code). There should then be a column for each of the variables that end in `_progN`, and should be filled in accordingly. Please confirm you understand, we can write this in `program_code_reshape.py`
 

@@ -24,6 +24,7 @@ ROOT_DIR = find_project_root()
 DATA_DIR = ROOT_DIR / 'data'
 RAW_DATA_DIR = DATA_DIR / 'raw'
 GEOCODE_DIR = DATA_DIR / 'geocode'
+TRANSFORMED_DIR = DATA_DIR / 'transformed'
 SRC_DIR = ROOT_DIR / 'src'
 
 
@@ -31,10 +32,11 @@ SRC_DIR = ROOT_DIR / 'src'
 if __name__ == '__main__':
 
     dir_dict = {
-        'ROOT_DIR': ROOT_DIR, 
-        'DATA_DIR': DATA_DIR, 
-        'GEOCODE_DIR': GEOCODE_DIR,
+        'ROOT_DIR': ROOT_DIR,
+        'DATA_DIR': DATA_DIR,
         'RAW_DATA_DIR': RAW_DATA_DIR,
+        'GEOCODE_DIR': GEOCODE_DIR,
+        'TRANSFORMED_DIR': TRANSFORMED_DIR,
         'SRC_DIR': SRC_DIR,
     }
     for name, dir in dir_dict.items():

@@ -29,6 +29,9 @@ def reshape_by_program_code(df, print_output=False):
 
     pieces = []
     for n in range(1, 8):
+        # 2019 only has code_prog1–code_prog6
+        if f'code_prog{n}' not in df.columns:
+            continue
         suffix = f'_prog{n}'
         code_col = f'code_prog{n}'
 
