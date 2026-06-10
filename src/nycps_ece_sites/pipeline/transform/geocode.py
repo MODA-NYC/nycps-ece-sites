@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 
 from nycps_ece_sites.utils import config_paths
 
+import argparse
+
 from tabulate import tabulate
 import textwrap
 
@@ -23,10 +25,11 @@ load_dotenv(ROOT_DIR / '.env')
 # %%
 
 if __name__ == '__main__':
-    # year = 2025
-    # year = 2024
-    # year = 2023
-    year = 2022
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--year', type=int, required=True, help='Year to geocode (e.g. 2025)')
+    args = parser.parse_args()
+    year = args.year
     df = pd.read_excel(RAW_DIR / f"site_dir_{year}.xlsx")
 
 # %% Set up data to Geocode the new data
@@ -48,12 +51,13 @@ response_columns = [
     'latitude', 'longitude',
     'xCoordinate', 'yCoordinate', 
     'communityDistrict',
+    'communitySchoolDistrict'
 ]
 # %%'
 
 # run everything mid-program, before running checks (helpful when debugging
 # an additional year of data and running interactively)
-RUN_ALL = False
+RUN_ALL_FOR_CHECKS = False
 # run checks of geocoded dataframe mid-program. sees if there are missing
 # responses which you can investigate. helpful when debugging an additional
 # year of data and running interactively
@@ -1068,7 +1072,7 @@ if __name__ == '__main__':
 
 # %% Run everything
 if __name__ == '__main__':
-    if RUN_ALL:
+    if RUN_ALL_FOR_CHECKS:
         geo_df = geocode_df(geo_df)
 
 # %%
@@ -1146,91 +1150,91 @@ if __name__ == '__main__':
             df.loc[df['schooldbn'] == '08G778', ['schooldbn', 'address', 'url']]
 
 
-# %%
+# # %%
 
-def geocode_site_data(
-        df, id_var='schooldbn', replace_address_dict=None,
-        print_output=False, save_path=None
-    ):
-    """
-    Format and geocode a site directory dataframe.
+# def geocode_site_data(
+#         df, id_var='schooldbn', replace_address_dict=None,
+#         print_output=False, save_path=None
+#     ):
+#     """
+#     Format and geocode a site directory dataframe.
 
-    Parameters:
-    - df: raw site directory dataframe
-    - id_var: column to use as unique site identifier
-    - replace_address_dict: dict of address corrections (keyed by site id)
-    - print_output: whether to print progress
-    - save_path: if provided, save the geocoded dataframe to this path
+#     Parameters:
+#     - df: raw site directory dataframe
+#     - id_var: column to use as unique site identifier
+#     - replace_address_dict: dict of address corrections (keyed by site id)
+#     - print_output: whether to print progress
+#     - save_path: if provided, save the geocoded dataframe to this path
 
-    Returns:
-    - geo_df: geocoded dataframe with id, address, and geocode columns
-    """
-    geo_df = _format_df(
-        df, print_output=print_output,
-        id_var=id_var, replace_address_dict=replace_address_dict)
+#     Returns:
+#     - geo_df: geocoded dataframe with id, address, and geocode columns
+#     """
+#     geo_df = _format_df(
+#         df, print_output=print_output,
+#         id_var=id_var, replace_address_dict=replace_address_dict)
 
-    if print_output:
-        print('\nGeocoding addresses...')
-    geo_df = geocode_df(geo_df, print_errors=False)
+#     if print_output:
+#         print('\nGeocoding addresses...')
+#     geo_df = geocode_df(geo_df, print_errors=False)
 
-    # rename variable for merging back into original site directory dataframe
-    geo_df.rename(columns={'id': 'schooldbn'}, inplace=True)
+#     # rename variable for merging back into original site directory dataframe
+#     geo_df.rename(columns={'id': 'schooldbn'}, inplace=True)
 
-    if save_path is not None:
-        geo_df.to_csv(save_path, index=False)
-        if print_output:
-            print(f"\nSaved geocoded data to {save_path}")
+#     if save_path is not None:
+#         geo_df.to_csv(save_path, index=False)
+#         if print_output:
+#             print(f"\nSaved geocoded data to {save_path}")
 
-    return geo_df
-
-
-def merge_geocode(df, geo_df, id_var='schooldbn'):
-    """
-    Merge geocoded data back onto the original site directory dataframe.
-
-    Parameters:
-    - df: original site directory dataframe; contains id_var `schooldbn`
-    - id_var: column used as unique site identifier in original site df
-    - geo_df: geocoded dataframe (output of geocode_site_data; contains `id`)
-
-    Returns:
-    - merge_df: merged dataframe
-    """
-    merge_df = pd.merge(
-        left=df,
-        right=geo_df,
-        left_on=id_var,
-        right_on=id_var,
-        how='outer',
-        validate='m:1',
-        indicator=True
-    )
-
-    assert (merge_df['_merge'] == 'both').all()
-    merge_df.drop(columns=['_merge'], inplace=True)
-
-    return merge_df
+#     return geo_df
 
 
-if __name__ == '__main__':
-    if RUN_TEST_ONLY:
-        test_df = df.sample(5, random_state=2)
-        test_geo_df = geocode_site_data(
-            test_df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True,
-            # save_path=GEOCODE_DIR / f'site_dir_geo_{year}.csv'
-        )
-    else:
-        geo_df = geocode_site_data(
-            df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True,
-            save_path=GEOCODE_DIR / f'site_dir_geo_{year}.csv')
+# def merge_geocode(df, geo_df, id_var='schooldbn'):
+#     """
+#     Merge geocoded data back onto the original site directory dataframe.
+
+#     Parameters:
+#     - df: original site directory dataframe; contains id_var `schooldbn`
+#     - id_var: column used as unique site identifier in original site df
+#     - geo_df: geocoded dataframe (output of geocode_site_data; contains `id`)
+
+#     Returns:
+#     - merge_df: merged dataframe
+#     """
+#     merge_df = pd.merge(
+#         left=df,
+#         right=geo_df,
+#         left_on=id_var,
+#         right_on=id_var,
+#         how='outer',
+#         validate='m:1',
+#         indicator=True
+#     )
+
+#     assert (merge_df['_merge'] == 'both').all()
+#     merge_df.drop(columns=['_merge'], inplace=True)
+
+#     return merge_df
+
+
+# if __name__ == '__main__':
+#     if RUN_TEST_ONLY:
+#         test_df = df.sample(5, random_state=2)
+#         test_geo_df = geocode_site_data(
+#             test_df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True,
+#             # save_path=GEOCODE_DIR / f'site_dir_geo_{year}.csv'
+#         )
+#     else:
+#         geo_df = geocode_site_data(
+#             df, replace_address_dict=REPLACE_ADDRESS_DICTS.get(year, {}), print_output=True,
+#             save_path=GEOCODE_DIR / f'site_dir_geo_{year}.csv')
     
 
-    # %%
+#     # %%
 
-if __name__ == '__main__':
-    if RUN_TEST_ONLY:
-        merge_df = merge_geocode(test_df, test_geo_df)
-    else:
-        merge_df = merge_geocode(df, geo_df)
+# if __name__ == '__main__':
+#     if RUN_TEST_ONLY:
+#         merge_df = merge_geocode(test_df, test_geo_df)
+#     else:
+#         merge_df = merge_geocode(df, geo_df)
 
 # %%
