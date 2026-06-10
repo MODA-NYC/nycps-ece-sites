@@ -24,8 +24,8 @@ ROOT_DIR = find_project_root()
 DATA_DIR = ROOT_DIR / 'data'
 RAW_DATA_DIR = DATA_DIR / 'raw'
 GEOCODE_DIR = DATA_DIR / 'geocode'
-TRANSFORMED_DIR = DATA_DIR / 'transformed'
 SRC_DIR = ROOT_DIR / 'src'
+TRANSFORMED_DIR = SRC_DIR / 'nycps_ece_sites' / 'data' / 'transformed'
 
 
 # %%

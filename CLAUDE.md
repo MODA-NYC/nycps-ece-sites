@@ -25,18 +25,23 @@ nycps-ece-sites/
 ├── README.md
 ├── data/
 │   ├── raw/                    # Site directory xlsx files (2019-2025)
-│   └── geocode/                # Geocoded CSVs (2019-2025)
+│   ├── geocode/                # Geocoded CSVs (2019-2025)
+│   └── transformed/            # Transformed parquet files (2019-2025)
 ├── notebooks/
 │   └── explore.py              # Interactive exploration script
 ├── src/nycps_ece_sites/
-│   ├── __init__.py             # Exports main()
-│   ├── main.py                 # CLI entry point; calls extract
+│   ├── __init__.py             # Exports main() and load_sites()
+│   ├── main.py                 # CLI entry point; calls extract then transform (geocoding excluded)
 │   ├── pipeline/
 │   │   ├── extract.py          # Downloads site directory xlsx from InfoHub
+│   │   ├── load.py             # load_sites(years): returns transformed DataFrame for one or more years
 │   │   └── transform/
-│   │       └── geocode.py      # Address correction + NYC GeoClient geocoding
+│   │       ├── main.py         # Coordinates merge_geo + reshape; writes to src/.../data/transformed/
+│   │       ├── geocode.py      # Address correction + NYC GeoClient geocoding (run manually)
+│   │       ├── merge_geo.py    # Merges geocoded CSVs onto raw site data on schooldbn
+│   │       └── program_code_reshape.py  # Reshapes wide program codes to long format
 │   └── utils/
-│       └── config_paths.py     # Project root detection + path constants
+│       └── config_paths.py     # Project root detection + path constants (RAW_DATA_DIR, GEOCODE_DIR, TRANSFORMED_DIR)
 └── tests/
     ├── conftest.py              # Fixtures: raw_site_df, formatted_geo_df
     └── test_geocode_format.py  # Geocode formatting function tests
@@ -47,6 +52,8 @@ nycps-ece-sites/
 **Raw site directories** (`data/raw/site_dir_{year}.xlsx`): One file per year (2019-2025). Each row is a site × admission_process combination. Key identifiers: `schooldbn` (site ID), `admission_process` (3K, PK, or K). 167 columns in recent years, 122 columns are stable across all years. Contains address, program-level admissions info (seats, apps, priorities for up to 7 programs), and site metadata.
 
 **Geocoded data** (`data/geocode/site_dir_geo_{year}.csv`): Produced by the geocode pipeline. Columns: `schooldbn`, `address`, `borough`, `zip`, `house_number`, `street_name`, `latitude`, `longitude`, `xCoordinate`, `yCoordinate`, `communityDistrict`. One row per unique address (deduplicated from the raw data, which can have multiple rows per schooldbn due to admission_process).
+
+**Transformed data** (`src/nycps_ece_sites/data/transformed/site_dir_{year}.parquet`): Produced by `transform/main.py`. Bundled with the package so the forecasting repo can access it after `uv add git+...`. One row per `(schooldbn, admission_process, program_code)`. Contains all non-prog site columns (including geo) merged back in after reshape. Column counts by year: 2019 (56), 2020 (56), 2021 (55), 2022 (47), 2023–2025 (51). `communityDistrict` is int64 in years with complete geocoding and float64 in years with any GeoClient failures (2021, 2022, 2024).
 
 **Key facts:**
 - Year 2019 geocoded: 1,856/1,856 rows complete
@@ -76,14 +83,12 @@ When adding corrections for a new year, the process requires the NYC GeoClient A
 ```
 This will allow me to manually test your results using google maps.
 
-### 2. New transform steps (files to create in `pipeline/transform/`)
+### 2. Transform steps — PARTIALLY COMPLETE
 
-Two new transform modules are needed:
-- **Filter/select**: Reduce the raw 167-column data to only the columns needed for the forecasting use case. I will specify which columns later.
-- **Reshape program codes**: Program codes and relevant variables are wide in the data. They need to be reshaped.
-- **Merge geo**: Join the geocoded lat/lon/community district onto the filtered site data.
-
-These should follow the existing pattern: functions that take a DataFrame and return a DataFrame, with a `print_output` parameter for progress logging.
+- **Merge geo** (`merge_geo.py`) — COMPLETE: joins geocoded CSVs onto raw site data on `schooldbn`
+- **Reshape program codes** (`program_code_reshape.py`) — COMPLETE: reshapes wide `_progN` columns to long format; one row per `(schooldbn, admission_process, program_code)`
+- **Coordinate transform** (`transform/main.py`) — COMPLETE: runs merge → reshape → saves to `data/transformed/`; called from `src/nycps_ece_sites/main.py`
+- **Filter/select** — DEFERRED: reduce columns to only those needed for forecasting. Column list not yet specified.
 
 ### 3. Testing (`tests/`)
 
@@ -109,9 +114,9 @@ Fixtures live in `tests/conftest.py`: `raw_site_df` (mimics raw xlsx input) and 
 - **Geocode output schema**: CSVs in `data/geocode/` have the expected 11 columns
 - **Load interface** (once built): `load_sites(year)` returns the expected schema for each year; output is ready for joining on `schooldbn`
 
-### 4. Load interface
+### 4. Load interface — COMPLETE
 
-A public function (e.g., `load_sites(year)`) that returns a clean DataFrame ready for the forecasting repo to import. This is the last piece — it depends on the transform steps being done first.
+`load_sites(years)` in `pipeline/load.py` accepts a single year (int) or list of years and returns a concatenated DataFrame. Exported from `__init__.py` so the forecasting repo can call `from nycps_ece_sites import load_sites`. Reads from `src/nycps_ece_sites/data/transformed/` via a `__file__`-relative path, so it works both locally and when installed as a git dependency.
 
 ## Technical notes
 
@@ -120,7 +125,7 @@ A public function (e.g., `load_sites(year)`) that returns a clean DataFrame read
 - Python: 3.11+
 - The geocode module uses `if __name__ == '__main__'` blocks extensively. These serve two purposes: (1) genuinely interactive debugging (inspecting individual API responses, experimenting with address corrections for a new year) and (2) validation logic that should be migrated into the test suite. Keep the interactive/exploratory blocks; migrate the validation checks into tests. See "Validation checks to migrate" below for the specific list.
 - Address correction dicts in `geocode.py` are year-specific and maintained by hand — don't try to automate or restructure these unless asked
-- `config_paths.py` finds the project root by walking up to `pyproject.toml` — all path references go through this module
+- `config_paths.py` finds the project root by walking up to `pyproject.toml` — all path references go through this module. Path constants: `RAW_DATA_DIR`, `GEOCODE_DIR`, `TRANSFORMED_DIR`
 
 ## Coding conventions
 
